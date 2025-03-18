@@ -1,19 +1,39 @@
 import { useEffect, useState } from "react";
+import { useURLslug } from "./useURLslug";
 
 function RecipeDetails() {
-  const [numberOfGuests, setnumberOfGuests] = useState(1);
-
-  async function fetchUpdatedIngredients(guests: number) {
-    console.log(`fetch for ${guests}`);
-    const url = "http://127.0.0.1:8000/recipes/get_formatted_ingredients/spaghetti-bolognese/4/";
-    const res = await fetch(url);
-    const data = res.json();
-    console.log(data);
+  interface RecipeInfo {
+    recipe: string;
+    slug: string;
+    image: string;
+    instructions: string;
   }
+  const { slug } = useURLslug();
+  const [numberOfGuests, setnumberOfGuests] = useState(1);
+  const [ingredientList, setingredientList] = useState<string[]>([]);
+  const [recipeInfo, setrecipeInfo] = useState<RecipeInfo | null>(null);
 
   useEffect(() => {
-    fetchUpdatedIngredients(numberOfGuests);
-  });
+    fetchRecipeInfo(slug);
+  }, [slug]);
+
+  useEffect(() => {
+    fetchUpdatedIngredients(slug, numberOfGuests);
+  }, [slug, numberOfGuests]);
+
+  async function fetchUpdatedIngredients(slug: string, guests: number) {
+    const url = `http://127.0.0.1:8000/recipes/get_formatted_ingredients/${slug}/${guests}/`;
+    const res = await fetch(url);
+    const data = await res.json();
+    setingredientList(data.ingredients);
+  }
+
+  async function fetchRecipeInfo(slug: string) {
+    const url = `http://127.0.0.1:8000/recipes/get_recipe_info/${slug}/`;
+    const res = await fetch(url);
+    const data = await res.json();
+    setrecipeInfo(data);
+  }
 
   return (
     <div className="row">
@@ -38,9 +58,23 @@ function RecipeDetails() {
             </button>
           </div>
         </div>
-        <ul id="ingredients" className="list-group mt-4"></ul>
+        <ul id="ingredients" className="list-group mt-4">
+          {ingredientList.map((ingredient, index) => (
+            <li key={index} className="list-group-item">
+              <h5 className="mb-0">
+                <span className="ingredient-name">{ingredient}</span>
+              </h5>
+            </li>
+          ))}
+        </ul>
         <h2 className="mt-4">Instructions</h2>
-        {/* <span className="recipe-description mt-4"> {{ recipe.content|linebreaks }} </span> */}
+        {recipeInfo ? (
+          <span className="recipe-description mt-4" style={{ whiteSpace: "pre-line" }}>
+            {recipeInfo.instructions}
+          </span>
+        ) : (
+          <p>Loading...</p>
+        )}
       </div>
     </div>
   );
