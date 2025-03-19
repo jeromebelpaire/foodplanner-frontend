@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { useURLslug } from "./useURLslug";
-// import NavBar from "./NavBar";
+import { useParams } from "react-router-dom";
+
+type RouteParams = {
+  recipe_id: string;
+};
 
 function RecipeDetails() {
   interface RecipeInfo {
@@ -9,28 +12,29 @@ function RecipeDetails() {
     image: string;
     instructions: string;
   }
-  const { slug } = useURLslug();
+
+  const { recipe_id } = useParams<RouteParams>();
   const [numberOfGuests, setnumberOfGuests] = useState(1);
   const [ingredientList, setingredientList] = useState<string[]>([]);
   const [recipeInfo, setrecipeInfo] = useState<RecipeInfo | null>(null);
 
   useEffect(() => {
-    fetchRecipeInfo(slug);
-  }, [slug]);
+    fetchRecipeInfo(recipe_id!);
+  }, [recipe_id]);
 
   useEffect(() => {
-    fetchUpdatedIngredients(slug, numberOfGuests);
-  }, [slug, numberOfGuests]);
+    fetchUpdatedIngredients(recipe_id!, numberOfGuests);
+  }, [recipe_id, numberOfGuests]);
 
-  async function fetchUpdatedIngredients(slug: string, guests: number) {
-    const url = `http://127.0.0.1:8000/recipes/get_formatted_ingredients/${slug}/${guests}/`;
+  async function fetchUpdatedIngredients(recipe_id: string, guests: number) {
+    const url = `http://127.0.0.1:8000/recipes/get_formatted_ingredients/${recipe_id}/${guests}/`;
     const res = await fetch(url);
     const data = await res.json();
     setingredientList(data.ingredients);
   }
 
-  async function fetchRecipeInfo(slug: string) {
-    const url = `http://127.0.0.1:8000/recipes/get_recipe_info/${slug}/`;
+  async function fetchRecipeInfo(recipe_id: string) {
+    const url = `http://127.0.0.1:8000/recipes/get_recipe_info/${recipe_id}/`;
     const res = await fetch(url);
     const data = await res.json();
     setrecipeInfo(data);

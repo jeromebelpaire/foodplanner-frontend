@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 interface Recipe {
   title?: string;
+  id?: number;
   slug?: string;
 }
 
@@ -30,7 +31,7 @@ function HomePage() {
                   <h5 className="card-title">{recipe.title}</h5>
                 </div>
                 <div className="card-footer">
-                  <a href={`/recipe?slug=${recipe.slug}`} className="btn btn-primary">
+                  <a href={`/recipe/${recipe.id}/${recipe.slug}`} className="btn btn-primary">
                     Read More
                   </a>
                 </div>

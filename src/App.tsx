@@ -12,7 +12,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route index element={<HomePage />} />
-          <Route path="recipe" element={<RecipeDetails />} />
+          <Route path="recipe/:recipe_id/:slug" element={<RecipeDetails />} />
           <Route path="recipe_sum" element={<RecipeSum />} />
         </Routes>
       </BrowserRouter>
