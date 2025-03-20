@@ -25,7 +25,7 @@ function NavBar() {
                 </a>
               </li>
               <li className="nav-item">
-                <a className="nav-link active" aria-current="page" href="/recipe_sum">
+                <a className="nav-link active" aria-current="page" href="/grocery-lists">
                   Shopping Lists
                 </a>
               </li>

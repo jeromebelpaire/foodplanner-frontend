@@ -2,18 +2,20 @@ import "./App.css";
 import HomePage from "./components/HomePage";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import RecipeDetails from "./components/RecipeDetails";
-import RecipeSum from "./components/RecipeSum";
+import GroceryListSelect from "./components/GroceryListSelect";
 import NavBar from "./components/NavBar";
+import GroceryListManage from "./components/GroceryListManage";
 
 function App() {
   return (
     <>
-      <NavBar />
       <BrowserRouter>
+        <NavBar />
         <Routes>
           <Route index element={<HomePage />} />
           <Route path="recipe/:recipe_id/:slug" element={<RecipeDetails />} />
-          <Route path="recipe_sum" element={<RecipeSum />} />
+          <Route path="grocery-lists" element={<GroceryListSelect />} />
+          <Route path="grocery-list/:grocerylistid" element={<GroceryListManage />} />
         </Routes>
       </BrowserRouter>
     </>
