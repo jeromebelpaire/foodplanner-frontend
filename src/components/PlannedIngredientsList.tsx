@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-function PlannedIngredientsList() {
+function PlannedIngredientsList({ recipeUpdateFlag }) {
   interface IngredientInfo {
     quantity: number;
     unit: string;
@@ -18,7 +18,7 @@ function PlannedIngredientsList() {
 
   useEffect(() => {
     fetchPlannedIngredients(grocerylistid!);
-  }, [grocerylistid]);
+  }, [grocerylistid, recipeUpdateFlag]);
 
   async function fetchPlannedIngredients(grocerylistid: string) {
     const res = await fetch(

@@ -1,7 +1,15 @@
+import { useState } from "react";
 import GroceryListDropdown from "./GroceryListDropdown";
 import PlannedIngredientsList from "./PlannedIngredientsList";
+import RecipyListDropdown from "./RecipeListDropdown";
 
 function GroceryListManage() {
+  const [recipeUpdateFlag, setRecipeUpdateFlag] = useState(false);
+
+  const handleRecipePlanned = () => {
+    // Toggle or update the flag to trigger changes
+    setRecipeUpdateFlag((prev) => !prev);
+  };
   return (
     <div className="container py-5">
       <form id="create-grocerylist-select-form" method="post">
@@ -13,15 +21,14 @@ function GroceryListManage() {
         <input type="submit" className="btn btn-primary my-1" value="Create New List" />
       </form>
       <GroceryListDropdown />
-      <form id="recipe-select-form" method="post">
-        <p>Please select and submit a grocery list first</p>
-        {/* {% include 'recipes/recipe_form.html' %} */}
-      </form>
+      <p>Please select and submit a grocery list first</p>
+      <RecipyListDropdown onRecipePlanned={handleRecipePlanned} />
+      {/* {% include 'recipes/recipe_form.html' %} */}
       <h2 className="my-5">Planned Recipes</h2>
       <ul className="list-group" id="planned-recipes"></ul>
       <h2 className="my-5">Ingredients</h2>
       {/* <ul id="ingredients" className="list-group"></ul> */}
-      <PlannedIngredientsList />
+      <PlannedIngredientsList recipeUpdateFlag={recipeUpdateFlag} />
       <h2 className="my-5">Extras</h2>
       <form id="extras-select-form" method="post">
         <p>Please select and submit a grocery list first</p>
