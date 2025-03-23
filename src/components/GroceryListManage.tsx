@@ -1,4 +1,5 @@
 import GroceryListDropdown from "./GroceryListDropdown";
+import PlannedIngredientsList from "./PlannedIngredientsList";
 
 function GroceryListManage() {
   return (
@@ -19,7 +20,8 @@ function GroceryListManage() {
       <h2 className="my-5">Planned Recipes</h2>
       <ul className="list-group" id="planned-recipes"></ul>
       <h2 className="my-5">Ingredients</h2>
-      <ul id="ingredients" className="list-group"></ul>
+      {/* <ul id="ingredients" className="list-group"></ul> */}
+      <PlannedIngredientsList />
       <h2 className="my-5">Extras</h2>
       <form id="extras-select-form" method="post">
         <p>Please select and submit a grocery list first</p>
