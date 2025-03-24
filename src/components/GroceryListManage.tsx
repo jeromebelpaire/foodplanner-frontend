@@ -2,6 +2,7 @@ import { useState } from "react";
 import GroceryListDropdown from "./GroceryListDropdown";
 import PlannedIngredientsList from "./PlannedIngredientsList";
 import RecipyListDropdown from "./RecipeListDropdown";
+import PlannedRecipesList from "./PlannedRecipesList";
 
 function GroceryListManage() {
   const [recipeUpdateFlag, setRecipeUpdateFlag] = useState(false);
@@ -23,8 +24,10 @@ function GroceryListManage() {
       <p>Please select and submit a grocery list first</p>
       <RecipyListDropdown onRecipePlanned={handleRecipePlanned} />
       {/* {% include 'recipes/recipe_form.html' %} */}
-      <h2 className="my-5">Planned Recipes</h2>
-      <ul className="list-group" id="planned-recipes"></ul>
+      <PlannedRecipesList
+        onRecipePlanned={handleRecipePlanned}
+        recipeUpdateFlag={recipeUpdateFlag}
+      />
       <h2 className="my-5">Ingredients</h2>
       {/* <ul id="ingredients" className="list-group"></ul> */}
       <PlannedIngredientsList recipeUpdateFlag={recipeUpdateFlag} />
