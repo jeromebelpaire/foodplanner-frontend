@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Select from "react-select";
 
-function RecipyListDropdown({ onRecipePlanned }) {
+interface RecipyListDropdownProps {
+  onRecipePlanned: () => void;
+}
+
+function RecipyListDropdown({ onRecipePlanned }: RecipyListDropdownProps) {
   interface Recipe {
     title?: string;
     id?: number;
@@ -18,15 +22,9 @@ function RecipyListDropdown({ onRecipePlanned }) {
   const [selectedRecipe, setselectedRecipe] = useState<Option | null>(null);
   const [quantity, setQuantity] = useState("");
 
-  const handleSelectChange = (option: Option) => {
+  const handleSelectChange = (option: Option | null) => {
     setselectedRecipe(option);
   };
-
-  // const handlePost = () => {
-  //   if (selectedRecipe && quantity) {
-  //     console.log("Posting recipe id:", selectedRecipe.value, "with quantity:", quantity);
-  //   }
-  // };
 
   async function handlePost() {
     if (selectedRecipe && quantity && grocerylistid) {

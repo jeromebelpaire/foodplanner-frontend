@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-function PlannedIngredientsList({ recipeUpdateFlag }) {
+interface recipeUpdateFlagProps {
+  recipeUpdateFlag: boolean;
+}
+
+function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
   interface IngredientInfo {
     quantity: number;
     unit: string;

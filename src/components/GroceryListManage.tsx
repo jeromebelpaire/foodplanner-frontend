@@ -7,7 +7,6 @@ function GroceryListManage() {
   const [recipeUpdateFlag, setRecipeUpdateFlag] = useState(false);
 
   const handleRecipePlanned = () => {
-    // Toggle or update the flag to trigger changes
     setRecipeUpdateFlag((prev) => !prev);
   };
   return (
