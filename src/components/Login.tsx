@@ -19,7 +19,7 @@ function Login() {
     });
   }, []);
 
-  const handleSubmit = (e: React.ChangeEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 

@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchWithCSRF } from "./fetchWithCSRF";
+import Select from "react-select";
 
 function GroceryListDropdown() {
   interface GroceryList {
     name: string;
-    id: string;
+    id: number;
     username: string;
   }
 
@@ -13,20 +14,51 @@ function GroceryListDropdown() {
     [key: string]: GroceryList;
   }
 
+  interface Option {
+    value?: number;
+    label?: string;
+  }
+
   const [groceryLists, setgroceryLists] = useState<GroceryListCollection>({});
-  const [selectedList, setSelectedList] = useState<GroceryList | null>(null);
+  const [selectedList, setSelectedList] = useState<Option | null>(null);
 
   const navigate = useNavigate();
+  const { grocerylistid } = useParams();
+
+  const options: Option[] = useMemo(() => {
+    return Object.values(groceryLists).map((list) => ({
+      value: list.id,
+      label: list.name,
+    }));
+  }, [groceryLists]);
 
   useEffect(() => {
     fetchGroceryLists();
   }, []);
 
-  const { grocerylistid } = useParams();
+  useEffect(() => {
+    if (grocerylistid && options.length > 0) {
+      const foundOption = options.find((option) => option.value === parseInt(grocerylistid));
+      if (foundOption) {
+        setSelectedList(foundOption);
+      }
+    }
+  }, [grocerylistid, options]);
 
-  function handleSelect(list: GroceryList) {
-    setSelectedList(list);
-    navigate(`/grocery-list/${list.id}`, { state: { selectedList: selectedList } });
+  const handleSelectChange = (option: Option | null) => {
+    setSelectedList(option);
+    navigate(`/grocery-list/${option!.value}`);
+  };
+
+  async function deleteGroceryList(deleteUrl: string) {
+    if (!selectedList) {
+      throw new Error("Please select a list first");
+    }
+    await fetchWithCSRF(deleteUrl, {
+      method: "POST",
+      body: JSON.stringify({ grocery_list: selectedList.value }),
+    });
+    navigate(`/grocery-lists`);
   }
 
   async function fetchGroceryLists() {
@@ -35,35 +67,46 @@ function GroceryListDropdown() {
     setgroceryLists(data);
   }
 
+  async function handleCreation(formData: FormData) {
+    const res = await fetchWithCSRF(`http://127.0.0.1:8000/recipes/create_grocery_list/`, {
+      method: "POST",
+      body: formData,
+    });
+    // TODO review
+    const newList: GroceryList = await res.json();
+    const newOption = { value: newList.id, label: newList.name };
+
+    setgroceryLists((prev) => ({
+      ...prev,
+      [newList.id]: newList,
+    }));
+    navigate(`/grocery-list/${newList.id}`);
+    setSelectedList(newOption);
+  }
+
   return (
     <>
-      <div className="dropdown">
-        <button
-          className="btn btn-secondary dropdown-toggle"
-          type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-        >
-          {/* TODO check if this is really the best way to do it */}
-          {selectedList
-            ? `selected: ${selectedList.name}`
-            : grocerylistid && Object.keys(groceryLists).length > 0
-            ? `selected: ${groceryLists[grocerylistid].name}`
-            : "Please select list"}
+      <form action={handleCreation}>
+        <input className="form-control" name="name" />
+        <button className="btn btn-primary" type="submit">
+          Create New List
         </button>
-        <ul className="dropdown-menu">
-          {Object.values(groceryLists).map((list) => (
-            <li key={list.id}>
-              <button
-                type="button"
-                // className="dropdown-menu"
-                onClick={() => handleSelect(list)}
-              >{`${list.name}`}</button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      </form>
       <br />
+      <Select
+        options={options}
+        value={selectedList}
+        onChange={handleSelectChange}
+        placeholder={`Select a list`}
+      />
+      {grocerylistid && (
+        <button
+          className="btn btn-danger float-right delete-button"
+          onClick={() => deleteGroceryList(`http://127.0.0.1:8000/recipes/delete_grocery_list/`)}
+        >
+          {`Delete: ${selectedList?.label}`}
+        </button>
+      )}
     </>
   );
 }

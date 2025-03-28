@@ -47,7 +47,7 @@ function RecipeDetails() {
       <div className="row">
         <div className="col-md-8 offset-md-2">
           <div className="d-flex justify-content-between align-items-center">
-            <h1 className="display-4">TODO Placeholder Title</h1>
+            <h1 className="display-4">{recipeInfo?.recipe}</h1>
             <div>
               <button
                 id="decrease-guests"
