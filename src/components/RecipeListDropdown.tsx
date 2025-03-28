@@ -1,22 +1,25 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Select from "react-select";
+import { fetchWithCSRF } from "./fetchWithCSRF";
 
 interface RecipyListDropdownProps {
   onRecipePlanned: () => void;
+  type: string;
 }
 
-function RecipyListDropdown({ onRecipePlanned }: RecipyListDropdownProps) {
+function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) {
   interface Recipe {
     title?: string;
     id?: number;
-    slug?: string;
   }
 
   interface Option {
     value?: number;
     label?: string;
   }
+
+  const formatted_type = type == "recipe" ? "Recipe" : "Extra";
 
   const [recipes, setrecipes] = useState<Recipe[]>([]);
   const [selectedRecipe, setselectedRecipe] = useState<Option | null>(null);
@@ -30,29 +33,26 @@ function RecipyListDropdown({ onRecipePlanned }: RecipyListDropdownProps) {
     if (selectedRecipe && quantity && grocerylistid) {
       const formData = new FormData();
       formData.append("grocery_list", grocerylistid);
-      formData.append("recipes", selectedRecipe.value!.toString());
-      formData.append("guests", quantity);
+      formData.append(`${type}s`, selectedRecipe.value!.toString());
+      formData.append(type == "recipe" ? "guests" : "quantity", quantity);
 
       try {
-        const response = await fetch("http://127.0.0.1:8000/recipes/save_planned_recipe/", {
-          method: "POST",
-          body: formData,
-          // If needed, include credentials or headers for CSRF
-          // credentials: 'include',
-          // headers: {
-          //   "X-CSRFToken": getCookie("csrftoken"), // example if you have a getCookie function
-          // },
-        });
+        const response = await fetchWithCSRF(
+          `http://127.0.0.1:8000/recipes/save_planned_${type}/`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
         const data = await response.json();
         if (data.success) {
-          console.log("Planned recipe saved!");
           // Optionally, clear your form or provide user feedback here.
           onRecipePlanned();
         } else {
-          console.error("Failed to save the planned recipe", data);
+          console.error("Failed to save the item", data);
         }
       } catch (error) {
-        console.error("Error saving planned recipe", error);
+        console.error("Error saving the item", error);
       }
     }
   }
@@ -64,9 +64,10 @@ function RecipyListDropdown({ onRecipePlanned }: RecipyListDropdownProps) {
   const { grocerylistid } = useParams();
 
   async function fetchAllRecipes() {
-    const res = await fetch("http://127.0.0.1:8000/recipes/get_recipes/");
+    const url_suffix = type == "recipe" ? "recipe" : "ingredient";
+    const res = await fetchWithCSRF(`http://127.0.0.1:8000/recipes/get_${url_suffix}s/`);
     const data = await res.json();
-    setrecipes(data.recipes);
+    setrecipes(data[`${url_suffix}s`]);
   }
 
   const options = recipes.map((recipe) => ({
@@ -76,12 +77,13 @@ function RecipyListDropdown({ onRecipePlanned }: RecipyListDropdownProps) {
 
   return (
     <div>
-      <h3>Select a Recipe</h3>
+      <br />
+      <h3 className="my-3">{`Plan a ${formatted_type}`}</h3>
       <Select
         options={options}
         value={selectedRecipe}
         onChange={handleSelectChange}
-        placeholder="Select a Recipe"
+        placeholder={`Select a ${formatted_type}`}
       />
       {selectedRecipe && (
         <div style={{ marginTop: "1rem" }}>
@@ -91,7 +93,7 @@ function RecipyListDropdown({ onRecipePlanned }: RecipyListDropdownProps) {
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
           />
-          <button onClick={handlePost}>Plan Recipe</button>
+          <button onClick={handlePost}>{`Plan ${formatted_type}`}</button>
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { fetchWithCSRF } from "./fetchWithCSRF";
 
 interface recipeUpdateFlagProps {
   recipeUpdateFlag: boolean;
@@ -25,7 +26,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
   }, [grocerylistid, recipeUpdateFlag]);
 
   async function fetchPlannedIngredients(grocerylistid: string) {
-    const res = await fetch(
+    const res = await fetchWithCSRF(
       `http://127.0.0.1:8000/recipes/get_planned_ingredients/?grocery_list=${grocerylistid}`
     );
     const data = await res.json();
@@ -34,13 +35,16 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
 
   return (
     <>
-      {Object.entries(plannedIngredients).map(([ingredientName, ingredientInfo]) => (
-        <li key={ingredientName} className="list-group-item">
-          <input type="checkbox" />
-          {` ${ingredientInfo.quantity} ${ingredientInfo.unit} ${ingredientName} `}
-          <span className="small-text">{`for ${ingredientInfo.from_recipe}`}</span>
-        </li>
-      ))}
+      <h2 className="my-2">Shopping List</h2>
+      <ul className="list-group">
+        {Object.entries(plannedIngredients).map(([ingredientName, ingredientInfo]) => (
+          <li key={ingredientName} className="list-group-item">
+            <input type="checkbox" />
+            {` ${ingredientInfo.quantity} ${ingredientInfo.unit} ${ingredientName} `}
+            <span className="small-text">{`for ${ingredientInfo.from_recipe}`}</span>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

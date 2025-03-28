@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { fetchWithCSRF } from "./fetchWithCSRF";
 
 function GroceryListDropdown() {
   interface GroceryList {
@@ -29,7 +30,7 @@ function GroceryListDropdown() {
   }
 
   async function fetchGroceryLists() {
-    const res = await fetch("http://127.0.0.1:8000/recipes/get_grocery_lists");
+    const res = await fetchWithCSRF("http://127.0.0.1:8000/recipes/get_grocery_lists");
     const data = await res.json();
     setgroceryLists(data);
   }
@@ -57,7 +58,7 @@ function GroceryListDropdown() {
                 type="button"
                 // className="dropdown-menu"
                 onClick={() => handleSelect(list)}
-              >{`${list.name} by ${list.username}`}</button>
+              >{`${list.name}`}</button>
             </li>
           ))}
         </ul>
