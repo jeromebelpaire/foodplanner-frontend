@@ -21,10 +21,10 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
   const formatted_type = type == "recipe" ? "Recipe" : "Extra";
 
   useEffect(() => {
-    fetchPlannedRecipes();
-  }, [recipeUpdateFlag]);
+    fetchPlannedRecipes(type, grocerylistid!);
+  }, [type, grocerylistid, recipeUpdateFlag]);
 
-  async function fetchPlannedRecipes() {
+  async function fetchPlannedRecipes(type: string, grocerylistid: string) {
     const res = await fetchWithCSRF(
       `http://127.0.0.1:8000/recipes/get_planned_${type}s/?grocery_list=${grocerylistid}`,
       {
@@ -37,7 +37,7 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
 
   async function deletePlannedRecipe(deleteUrl: string) {
     await fetchWithCSRF(deleteUrl, { method: "DELETE" });
-    fetchPlannedRecipes(); //Optional: TODO check if necessary
+    fetchPlannedRecipes(type, grocerylistid!);
     onRecipePlanned();
   }
 
