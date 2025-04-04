@@ -1,0 +1,16 @@
+{
+  "routes": [
+    {
+      "route": "/login",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/recipe/*",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/*",
+      "serve": "/index.html"
+    }
+  ]
+}
