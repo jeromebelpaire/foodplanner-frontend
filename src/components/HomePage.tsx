@@ -15,7 +15,7 @@ function HomePage() {
   }, []);
 
   async function fetchAllRecipes() {
-    const res = await fetchWithCSRF("http://127.0.0.1:8000/recipes/get_recipes/");
+    const res = await fetchWithCSRF("/recipes/get_recipes/");
     const data = await res.json();
     setrecipes(data.recipes);
   }

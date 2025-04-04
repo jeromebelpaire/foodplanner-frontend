@@ -26,7 +26,7 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
 
   async function fetchPlannedRecipes(type: string, grocerylistid: string) {
     const res = await fetchWithCSRF(
-      `http://127.0.0.1:8000/recipes/get_planned_${type}s/?grocery_list=${grocerylistid}`,
+      `/recipes/get_planned_${type}s/?grocery_list=${grocerylistid}`,
       {
         method: "POST",
       }
@@ -51,7 +51,7 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
             {recipe.str}{" "}
             <button
               className="btn btn-danger float-right delete-button"
-              onClick={() => deletePlannedRecipe(`http://127.0.0.1:8000/${recipe.delete_url}`)}
+              onClick={() => deletePlannedRecipe(`/${recipe.delete_url}`)}
             >
               Delete
             </button>

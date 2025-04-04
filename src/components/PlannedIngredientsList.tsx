@@ -27,7 +27,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
 
   async function fetchPlannedIngredients(grocerylistid: string) {
     const res = await fetchWithCSRF(
-      `http://127.0.0.1:8000/recipes/get_planned_ingredients/?grocery_list=${grocerylistid}`
+      `/recipes/get_planned_ingredients/?grocery_list=${grocerylistid}`
     );
     const data = await res.json();
     setplannedIngredients(data);

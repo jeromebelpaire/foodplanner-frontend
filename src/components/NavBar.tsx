@@ -1,4 +1,5 @@
 function NavBar() {
+  const adminURL = import.meta.env.VITE_DJANGO_ADMIN_URL;
   return (
     <div>
       <nav className="navbar navbar-expand-lg navbar-dark dark-navbar">
@@ -33,7 +34,7 @@ function NavBar() {
                 <a
                   className="nav-link active"
                   aria-current="page"
-                  href="http://127.0.0.1:8000/admin/recipes/recipe/add/"
+                  href={`${adminURL}/recipes/recipe/add/`}
                 >
                   Add a recipe
                 </a>
@@ -42,7 +43,7 @@ function NavBar() {
                 <a
                   className="nav-link active"
                   aria-current="page"
-                  href="http://127.0.0.1:8000/admin/recipes/recipe/"
+                  href={`${adminURL}/recipes/recipe/`}
                 >
                   Manage recipes
                 </a>

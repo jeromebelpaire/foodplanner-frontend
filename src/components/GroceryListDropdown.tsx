@@ -62,13 +62,13 @@ function GroceryListDropdown() {
   }
 
   async function fetchGroceryLists() {
-    const res = await fetchWithCSRF("http://127.0.0.1:8000/recipes/get_grocery_lists");
+    const res = await fetchWithCSRF("/recipes/get_grocery_lists");
     const data = await res.json();
     setgroceryLists(data);
   }
 
   async function handleCreation(formData: FormData) {
-    const res = await fetchWithCSRF(`http://127.0.0.1:8000/recipes/create_grocery_list/`, {
+    const res = await fetchWithCSRF(`/recipes/create_grocery_list/`, {
       method: "POST",
       body: formData,
     });
@@ -102,7 +102,7 @@ function GroceryListDropdown() {
       {grocerylistid && (
         <button
           className="btn btn-danger float-right delete-button"
-          onClick={() => deleteGroceryList(`http://127.0.0.1:8000/recipes/delete_grocery_list/`)}
+          onClick={() => deleteGroceryList(`/recipes/delete_grocery_list/`)}
         >
           {`Delete: ${selectedList?.label}`}
         </button>

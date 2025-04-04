@@ -14,7 +14,7 @@ function Login() {
 
   // On mount, fetch the CSRF cookie.
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/recipes/csrf/", {
+    fetchWithCSRF("/recipes/csrf/", {
       credentials: "include",
     });
   }, []);
@@ -23,7 +23,7 @@ function Login() {
     e.preventDefault();
     setError("");
 
-    fetchWithCSRF("http://127.0.0.1:8000/recipes/login/", {
+    fetchWithCSRF("/recipes/login/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

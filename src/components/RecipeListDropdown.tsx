@@ -37,13 +37,10 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
       formData.append(type == "recipe" ? "guests" : "quantity", quantity);
 
       try {
-        const response = await fetchWithCSRF(
-          `http://127.0.0.1:8000/recipes/save_planned_${type}/`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+        const response = await fetchWithCSRF(`/recipes/save_planned_${type}/`, {
+          method: "POST",
+          body: formData,
+        });
         const data = await response.json();
         if (data.success) {
           // Optionally, clear your form or provide user feedback here.
@@ -65,7 +62,7 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
 
   async function fetchAllRecipes() {
     const url_suffix = type == "recipe" ? "recipe" : "ingredient";
-    const res = await fetchWithCSRF(`http://127.0.0.1:8000/recipes/get_${url_suffix}s/`);
+    const res = await fetchWithCSRF(`/recipes/get_${url_suffix}s/`);
     const data = await res.json();
     setrecipes(data[`${url_suffix}s`]);
   }
