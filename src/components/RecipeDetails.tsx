@@ -14,6 +14,8 @@ function RecipeDetails() {
     instructions: string;
   }
 
+  const mediaUrl = import.meta.env.VITE_MEDIA_URL || "";
+
   const { recipe_id } = useParams<RouteParams>();
   const [numberOfGuests, setnumberOfGuests] = useState(1);
   const [ingredientList, setingredientList] = useState<string[]>([]);
@@ -66,6 +68,11 @@ function RecipeDetails() {
               </button>
             </div>
           </div>
+          <img
+            src={`${mediaUrl}/${recipeInfo?.image}`}
+            alt="Picture unavailable"
+            className="img-fluid mx-auto d-block"
+          />
           <ul id="ingredients" className="list-group mt-4">
             {ingredientList.map((ingredient, index) => (
               <li key={index} className="list-group-item">
