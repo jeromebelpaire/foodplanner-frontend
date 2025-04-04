@@ -28,18 +28,14 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
 
   async function fetchPlannedRecipes(type: string, grocerylistid: string) {
     const res = await fetchFromBackend(
-      `/recipes/get_planned_${type}s/?grocery_list=${grocerylistid}`,
-      {
-        headers: { "X-CSRFToken": csrfToken },
-        method: "POST",
-      }
+      `/recipes/get_planned_${type}s/?grocery_list=${grocerylistid}`
     );
     const data = await res.json();
     setplannedRecipes(data);
   }
 
   async function deletePlannedRecipe(deleteUrl: string) {
-    await fetchFromBackend(deleteUrl, { method: "DELETE" });
+    await fetchFromBackend(deleteUrl, { method: "DELETE", headers: { "X-CSRFToken": csrfToken } });
     fetchPlannedRecipes(type, grocerylistid!);
     onRecipePlanned();
   }

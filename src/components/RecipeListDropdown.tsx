@@ -58,12 +58,12 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
   }
 
   useEffect(() => {
-    fetchAllRecipes();
-  }, []);
+    fetchAllRecipes(type);
+  }, [type]);
 
   const { grocerylistid } = useParams();
 
-  async function fetchAllRecipes() {
+  async function fetchAllRecipes(type: string) {
     const url_suffix = type == "recipe" ? "recipe" : "ingredient";
     const res = await fetchFromBackend(`/recipes/get_${url_suffix}s/`);
     const data = await res.json();

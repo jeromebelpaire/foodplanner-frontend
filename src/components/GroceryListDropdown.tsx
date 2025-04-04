@@ -57,7 +57,7 @@ function GroceryListDropdown() {
       throw new Error("Please select a list first");
     }
     await fetchFromBackend(deleteUrl, {
-      method: "POST",
+      method: "DELETE",
       headers: { "X-CSRFToken": csrfToken },
       body: JSON.stringify({ grocery_list: selectedList.value }),
     });

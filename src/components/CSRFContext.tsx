@@ -1,14 +1,22 @@
 // CSRFContext.js
 import { createContext, useContext, useState, useEffect } from "react";
 
+interface CSRFContextType {
+  csrfToken: string;
+  setCsrfToken: (token: string) => void;
+}
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
 let csrfRefreshUrl = "/recipes/csrf/";
 if (csrfRefreshUrl.startsWith("/")) {
   csrfRefreshUrl = `${backendUrl}${csrfRefreshUrl}`;
 }
-const CSRFContext = createContext({ csrfToken: "" });
+const CSRFContext = createContext<CSRFContextType>({
+  csrfToken: "",
+  setCsrfToken: () => {},
+});
 
-export function CSRFProvider({ children }) {
+export function CSRFProvider({ children }: { children: React.ReactNode }) {
   const [csrfToken, setCsrfToken] = useState("");
 
   useEffect(() => {
