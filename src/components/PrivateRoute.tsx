@@ -1,7 +1,7 @@
 // PrivateRoute.js
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { fetchWithCSRF } from "./fetchWithCSRF";
+import { fetchFromBackend } from "./fetchFromBackend";
 
 export function PrivateRoute() {
   const [loading, setLoading] = useState(true);
@@ -12,7 +12,7 @@ export function PrivateRoute() {
   const loginUrl = "/login/?next=" + encodeURIComponent(nextUrl);
   useEffect(() => {
     // Check authentication status using the session cookie.
-    fetchWithCSRF("/recipes/auth/status/", { credentials: "include" })
+    fetchFromBackend("/recipes/auth/status/", { credentials: "include" })
       .then((response) => {
         setAuthenticated(response.ok);
       })

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchWithCSRF } from "./fetchWithCSRF";
+import { fetchFromBackend } from "./fetchFromBackend";
 
 interface Recipe {
   title?: string;
@@ -15,7 +15,7 @@ function HomePage() {
   }, []);
 
   async function fetchAllRecipes() {
-    const res = await fetchWithCSRF("/recipes/get_recipes/");
+    const res = await fetchFromBackend("/recipes/get_recipes/");
     const data = await res.json();
     setrecipes(data.recipes);
   }

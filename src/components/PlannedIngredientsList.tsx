@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { fetchWithCSRF } from "./fetchWithCSRF";
+import { fetchFromBackend } from "./fetchFromBackend";
 
 interface recipeUpdateFlagProps {
   recipeUpdateFlag: boolean;
@@ -26,7 +26,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
   }, [grocerylistid, recipeUpdateFlag]);
 
   async function fetchPlannedIngredients(grocerylistid: string) {
-    const res = await fetchWithCSRF(
+    const res = await fetchFromBackend(
       `/recipes/get_planned_ingredients/?grocery_list=${grocerylistid}`
     );
     const data = await res.json();

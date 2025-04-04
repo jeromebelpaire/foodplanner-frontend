@@ -1,9 +1,11 @@
 // Login.js
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { fetchWithCSRF } from "./fetchWithCSRF";
+import { fetchFromBackend } from "./fetchFromBackend";
+import { useCSRF } from "./CSRFContext";
 
 function Login() {
+  const { csrfToken } = useCSRF();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -12,21 +14,15 @@ function Login() {
 
   const nextParam = searchParams.get("next") || "/";
 
-  // On mount, fetch the CSRF cookie.
-  useEffect(() => {
-    fetchWithCSRF("/recipes/csrf/", {
-      credentials: "include",
-    });
-  }, []);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    fetchWithCSRF("/recipes/login/", {
+    fetchFromBackend("/recipes/login/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
       },
       body: JSON.stringify({ username, password }),
     })

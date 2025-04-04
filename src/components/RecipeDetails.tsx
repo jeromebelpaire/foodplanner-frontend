@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { fetchWithCSRF } from "./fetchWithCSRF";
+import { fetchFromBackend } from "./fetchFromBackend";
 
 type RouteParams = {
   recipe_id: string;
@@ -29,14 +29,14 @@ function RecipeDetails() {
 
   async function fetchUpdatedIngredients(recipe_id: string, guests: number) {
     const url = `/recipes/get_formatted_ingredients/${recipe_id}/${guests}/`;
-    const res = await fetchWithCSRF(url);
+    const res = await fetchFromBackend(url);
     const data = await res.json();
     setingredientList(data.ingredients);
   }
 
   async function fetchRecipeInfo(recipe_id: string) {
     const url = `/recipes/get_recipe_info/${recipe_id}/`;
-    const res = await fetchWithCSRF(url);
+    const res = await fetchFromBackend(url);
     const data = await res.json();
     setrecipeInfo(data);
   }

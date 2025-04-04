@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { fetchWithCSRF } from "./fetchWithCSRF";
+import { fetchFromBackend } from "./fetchFromBackend";
+import { useCSRF } from "./CSRFContext";
 
 interface PlannedRecipe {
   id?: string;
@@ -15,6 +16,7 @@ interface PlannedRecipesListProps {
 }
 
 function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: PlannedRecipesListProps) {
+  const { csrfToken } = useCSRF();
   const [plannedRecipes, setplannedRecipes] = useState<PlannedRecipe[]>([]);
   const { grocerylistid } = useParams();
 
@@ -25,9 +27,10 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
   }, [type, grocerylistid, recipeUpdateFlag]);
 
   async function fetchPlannedRecipes(type: string, grocerylistid: string) {
-    const res = await fetchWithCSRF(
+    const res = await fetchFromBackend(
       `/recipes/get_planned_${type}s/?grocery_list=${grocerylistid}`,
       {
+        headers: { "X-CSRFToken": csrfToken },
         method: "POST",
       }
     );
@@ -36,7 +39,7 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
   }
 
   async function deletePlannedRecipe(deleteUrl: string) {
-    await fetchWithCSRF(deleteUrl, { method: "DELETE" });
+    await fetchFromBackend(deleteUrl, { method: "DELETE" });
     fetchPlannedRecipes(type, grocerylistid!);
     onRecipePlanned();
   }

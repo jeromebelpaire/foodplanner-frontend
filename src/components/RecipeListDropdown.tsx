@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Select from "react-select";
-import { fetchWithCSRF } from "./fetchWithCSRF";
+import { fetchFromBackend } from "./fetchFromBackend";
+import { useCSRF } from "./CSRFContext";
 
 interface RecipyListDropdownProps {
   onRecipePlanned: () => void;
@@ -19,6 +20,7 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
     label?: string;
   }
 
+  const { csrfToken } = useCSRF();
   const formatted_type = type == "recipe" ? "Recipe" : "Extra";
 
   const [recipes, setrecipes] = useState<Recipe[]>([]);
@@ -37,8 +39,9 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
       formData.append(type == "recipe" ? "guests" : "quantity", quantity);
 
       try {
-        const response = await fetchWithCSRF(`/recipes/save_planned_${type}/`, {
+        const response = await fetchFromBackend(`/recipes/save_planned_${type}/`, {
           method: "POST",
+          headers: { "X-CSRFToken": csrfToken },
           body: formData,
         });
         const data = await response.json();
@@ -62,7 +65,7 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
 
   async function fetchAllRecipes() {
     const url_suffix = type == "recipe" ? "recipe" : "ingredient";
-    const res = await fetchWithCSRF(`/recipes/get_${url_suffix}s/`);
+    const res = await fetchFromBackend(`/recipes/get_${url_suffix}s/`);
     const data = await res.json();
     setrecipes(data[`${url_suffix}s`]);
   }

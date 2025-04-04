@@ -7,21 +7,24 @@ import GroceryListSelect from "./components/GroceryListSelect";
 import NavBar from "./components/NavBar";
 import GroceryListManage from "./components/GroceryListManage";
 import { PrivateRoute } from "./components/PrivateRoute";
+import { CSRFProvider } from "./components/CSRFContext";
 
 function App() {
   return (
     <>
       <BrowserRouter>
-        <NavBar />
-        <Routes>
-          <Route path="login" element={<Login />} />
-          <Route element={<PrivateRoute />}>
-            <Route index element={<HomePage />} />
-            <Route path="recipe/:recipe_id/:slug" element={<RecipeDetails />} />
-            <Route path="grocery-lists" element={<GroceryListSelect />} />
-            <Route path="grocery-list/:grocerylistid" element={<GroceryListManage />} />
-          </Route>
-        </Routes>
+        <CSRFProvider>
+          <NavBar />
+          <Routes>
+            <Route path="login" element={<Login />} />
+            <Route element={<PrivateRoute />}>
+              <Route index element={<HomePage />} />
+              <Route path="recipe/:recipe_id/:slug" element={<RecipeDetails />} />
+              <Route path="grocery-lists" element={<GroceryListSelect />} />
+              <Route path="grocery-list/:grocerylistid" element={<GroceryListManage />} />
+            </Route>
+          </Routes>
+        </CSRFProvider>
       </BrowserRouter>
     </>
   );

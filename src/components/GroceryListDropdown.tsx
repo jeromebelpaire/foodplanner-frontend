@@ -1,9 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchWithCSRF } from "./fetchWithCSRF";
+import { fetchFromBackend } from "./fetchFromBackend";
+import { useCSRF } from "./CSRFContext";
 import Select from "react-select";
 
 function GroceryListDropdown() {
+  const { csrfToken } = useCSRF();
   interface GroceryList {
     name: string;
     id: number;
@@ -54,22 +56,24 @@ function GroceryListDropdown() {
     if (!selectedList) {
       throw new Error("Please select a list first");
     }
-    await fetchWithCSRF(deleteUrl, {
+    await fetchFromBackend(deleteUrl, {
       method: "POST",
+      headers: { "X-CSRFToken": csrfToken },
       body: JSON.stringify({ grocery_list: selectedList.value }),
     });
     navigate(`/grocery-lists`);
   }
 
   async function fetchGroceryLists() {
-    const res = await fetchWithCSRF("/recipes/get_grocery_lists");
+    const res = await fetchFromBackend("/recipes/get_grocery_lists");
     const data = await res.json();
     setgroceryLists(data);
   }
 
   async function handleCreation(formData: FormData) {
-    const res = await fetchWithCSRF(`/recipes/create_grocery_list/`, {
+    const res = await fetchFromBackend(`/recipes/create_grocery_list/`, {
       method: "POST",
+      headers: { "X-CSRFToken": csrfToken },
       body: formData,
     });
     // TODO review

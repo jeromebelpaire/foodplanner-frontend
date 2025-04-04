@@ -1,6 +1,6 @@
 import getCookie from "./getCookie";
 
-export async function fetchWithCSRF(url: string, options: RequestInit = {}) {
+export async function fetchFromBackend(url: string, options: RequestInit = {}) {
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
 
   // If the input URL is relative, prepend the backend URL.
