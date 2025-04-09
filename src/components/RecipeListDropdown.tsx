@@ -26,6 +26,7 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
   const [recipes, setrecipes] = useState<Recipe[]>([]);
   const [selectedRecipe, setselectedRecipe] = useState<Option | null>(null);
   const [quantity, setQuantity] = useState("");
+  const [recipeDate, setrecipeDate] = useState("");
 
   const handleSelectChange = (option: Option | null) => {
     setselectedRecipe(option);
@@ -37,6 +38,7 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
       formData.append("grocery_list", grocerylistid);
       formData.append(`${type}s`, selectedRecipe.value!.toString());
       formData.append(type == "recipe" ? "guests" : "quantity", quantity);
+      formData.append("planned_on", recipeDate);
 
       try {
         const response = await fetchFromBackend(`/recipes/save_planned_${type}/`, {
@@ -93,6 +95,9 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
           />
+          {type == "recipe" && (
+            <input type="date" onChange={(e) => setrecipeDate(e.target.value)} />
+          )}
           <button onClick={handlePost}>{`Plan ${formatted_type}`}</button>
         </div>
       )}
