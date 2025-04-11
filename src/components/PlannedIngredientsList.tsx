@@ -8,9 +8,10 @@ interface recipeUpdateFlagProps {
 
 function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
   interface IngredientInfo {
+    name: string;
     quantity: number;
     unit: string;
-    from_recipe: string;
+    from_recipes: string;
   }
 
   interface IngredientCollection {
@@ -37,11 +38,11 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
     <>
       <h2 className="my-2">Shopping List</h2>
       <ul className="list-group">
-        {Object.entries(plannedIngredients).map(([ingredientName, ingredientInfo]) => (
-          <li key={ingredientName} className="list-group-item">
+        {Object.entries(plannedIngredients).map(([ingredientKey, ingredientInfo]) => (
+          <li key={ingredientKey} className="list-group-item">
             <input type="checkbox" />
-            {` ${ingredientInfo.quantity} ${ingredientInfo.unit} ${ingredientName} `}
-            <span className="small-text">{`for ${ingredientInfo.from_recipe}`}</span>
+            {` ${ingredientInfo.quantity} ${ingredientInfo.unit} ${ingredientInfo.name} `}
+            <span className="small-text">{`for ${ingredientInfo.from_recipes}`}</span>
           </li>
         ))}
       </ul>
