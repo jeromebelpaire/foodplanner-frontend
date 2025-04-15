@@ -9,7 +9,6 @@ interface Recipe {
 }
 
 function HomePage() {
-  const mediaUrl = import.meta.env.VITE_MEDIA_URL || "";
   const [recipes, setrecipes] = useState<Recipe[]>([]);
 
   useEffect(() => {
@@ -17,9 +16,9 @@ function HomePage() {
   }, []);
 
   async function fetchAllRecipes() {
-    const res = await fetchFromBackend("/recipes/get_recipes/");
+    const res = await fetchFromBackend("/api/recipes/");
     const data = await res.json();
-    setrecipes(data.recipes);
+    setrecipes(data);
   }
 
   return (
@@ -30,11 +29,7 @@ function HomePage() {
           {recipes.map((recipe) => (
             <div key={recipe.id} className="col">
               <div className="card h-100">
-                <img
-                  src={`${mediaUrl}/${recipe.image}`}
-                  alt="Picture unavailable"
-                  className="card-img-top"
-                />
+                <img src={`${recipe.image}`} alt="Picture unavailable" className="card-img-top" />
                 <div className="card-body">
                   <h5 className="card-title">{recipe.title}</h5>
                 </div>

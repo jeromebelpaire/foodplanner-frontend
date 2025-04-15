@@ -30,9 +30,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
   }, [grocerylistid, recipeUpdateFlag]);
 
   async function fetchPlannedIngredients(grocerylistid: string) {
-    const res = await fetchFromBackend(
-      `/recipes/get_planned_ingredients/?grocery_list=${grocerylistid}`
-    );
+    const res = await fetchFromBackend(`/api/grocerylistitems/?grocery_list=${grocerylistid}`);
     const data = await res.json();
     setplannedIngredients(data);
   }
@@ -50,14 +48,14 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
 
     try {
       // Send update to backend
-      await fetchFromBackend(`/recipes/update_grocerylistitem_state/`, {
+      await fetchFromBackend(`/api/recipes/update_grocerylistitem_state/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": csrfToken,
         },
         body: JSON.stringify({
-          grocery_list_id: grocerylistid,
+          grocerylists_id: grocerylistid,
           ingredient_id: ingredientKey,
           is_checked: !plannedIngredients[ingredientKey].is_checked,
         }),

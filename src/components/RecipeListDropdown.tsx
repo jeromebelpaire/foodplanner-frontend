@@ -13,6 +13,9 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
   interface Recipe {
     title?: string;
     id?: number;
+    name?: string;
+    unit?: string;
+    //TODO fix this different names for recipes and ingredients
   }
 
   interface Option {
@@ -36,12 +39,14 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
     if (selectedRecipe && quantity && grocerylistid) {
       const formData = new FormData();
       formData.append("grocery_list", grocerylistid);
-      formData.append(`${type}s`, selectedRecipe.value!.toString());
+      formData.append(type == "recipe" ? "recipe" : "ingredient", selectedRecipe.value!.toString());
       formData.append(type == "recipe" ? "guests" : "quantity", quantity);
-      formData.append("planned_on", recipeDate);
+      if (type === "recipe") {
+        formData.append("planned_on", recipeDate);
+      }
 
       try {
-        const response = await fetchFromBackend(`/recipes/save_planned_${type}/`, {
+        const response = await fetchFromBackend(`/api/planned${type}s/`, {
           method: "POST",
           headers: { "X-CSRFToken": csrfToken },
           body: formData,
@@ -67,14 +72,14 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
 
   async function fetchAllRecipes(type: string) {
     const url_suffix = type == "recipe" ? "recipe" : "ingredient";
-    const res = await fetchFromBackend(`/recipes/get_${url_suffix}s/`);
+    const res = await fetchFromBackend(`/api/${url_suffix}s/`);
     const data = await res.json();
-    setrecipes(data[`${url_suffix}s`]);
+    setrecipes(data);
   }
 
   const options = recipes.map((recipe) => ({
     value: recipe.id,
-    label: recipe.title,
+    label: type === "recipe" ? recipe.title : recipe.name + " (" + recipe.unit + ")",
   }));
 
   return (
@@ -91,12 +96,12 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
         <div style={{ marginTop: "1rem" }}>
           <input
             type="number"
-            placeholder="Enter quantity"
+            placeholder={type === "recipe" ? "Enter guests" : "Enter quantity"}
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
           />
           {type == "recipe" && (
-            <input type="date" onChange={(e) => setrecipeDate(e.target.value)} />
+            <input type="date" value={recipeDate} onChange={(e) => setrecipeDate(e.target.value)} />
           )}
           <button onClick={handlePost}>{`Plan ${formatted_type}`}</button>
         </div>

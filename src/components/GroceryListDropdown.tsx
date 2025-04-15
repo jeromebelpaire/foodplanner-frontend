@@ -59,19 +59,19 @@ function GroceryListDropdown() {
     await fetchFromBackend(deleteUrl, {
       method: "DELETE",
       headers: { "X-CSRFToken": csrfToken },
-      body: JSON.stringify({ grocery_list: selectedList.value }),
+      body: JSON.stringify({ grocerylists: selectedList.value }),
     });
     navigate(`/grocery-lists`);
   }
 
   async function fetchGroceryLists() {
-    const res = await fetchFromBackend("/recipes/get_grocery_lists");
+    const res = await fetchFromBackend("/api/grocerylists/");
     const data = await res.json();
     setgroceryLists(data);
   }
 
   async function handleCreation(formData: FormData) {
-    const res = await fetchFromBackend(`/recipes/create_grocery_list/`, {
+    const res = await fetchFromBackend(`/api/grocerylists/`, {
       method: "POST",
       headers: { "X-CSRFToken": csrfToken },
       body: formData,
@@ -106,7 +106,7 @@ function GroceryListDropdown() {
       {grocerylistid && (
         <button
           className="btn btn-danger float-right delete-button"
-          onClick={() => deleteGroceryList(`/recipes/delete_grocery_list/`)}
+          onClick={() => deleteGroceryList(`/recipes/delete_grocerylists/`)}
         >
           {`Delete: ${selectedList?.label}`}
         </button>

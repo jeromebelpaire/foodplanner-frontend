@@ -8,13 +8,11 @@ type RouteParams = {
 
 function RecipeDetails() {
   interface RecipeInfo {
-    recipe: string;
+    title: string;
     slug: string;
     image: string;
-    instructions: string;
+    content: string;
   }
-
-  const mediaUrl = import.meta.env.VITE_MEDIA_URL || "";
 
   const { recipe_id } = useParams<RouteParams>();
   const [numberOfGuests, setnumberOfGuests] = useState(1);
@@ -30,14 +28,14 @@ function RecipeDetails() {
   }, [recipe_id, numberOfGuests]);
 
   async function fetchUpdatedIngredients(recipe_id: string, guests: number) {
-    const url = `/recipes/get_formatted_ingredients/${recipe_id}/${guests}/`;
+    const url = `/api/recipes/${recipe_id}/formatted_ingredients/?${guests}/`;
     const res = await fetchFromBackend(url);
     const data = await res.json();
     setingredientList(data.ingredients);
   }
 
   async function fetchRecipeInfo(recipe_id: string) {
-    const url = `/recipes/get_recipe_info/${recipe_id}/`;
+    const url = `/api/recipes/${recipe_id}/`;
     const res = await fetchFromBackend(url);
     const data = await res.json();
     setrecipeInfo(data);
@@ -49,7 +47,7 @@ function RecipeDetails() {
       <div className="row">
         <div className="col-md-8 offset-md-2">
           <div className="d-flex justify-content-between align-items-center">
-            <h1 className="display-4">{recipeInfo?.recipe}</h1>
+            <h1 className="display-4">{recipeInfo?.title}</h1>
             <div>
               <button
                 id="decrease-guests"
@@ -69,7 +67,7 @@ function RecipeDetails() {
             </div>
           </div>
           <img
-            src={`${mediaUrl}/${recipeInfo?.image}`}
+            src={`${recipeInfo?.image}`}
             alt="Picture unavailable"
             className="img-fluid mx-auto d-block"
           />
@@ -85,7 +83,7 @@ function RecipeDetails() {
           <h2 className="mt-4">Instructions</h2>
           {recipeInfo ? (
             <span className="recipe-description mt-4" style={{ whiteSpace: "pre-line" }}>
-              {recipeInfo.instructions}
+              {recipeInfo.content}
             </span>
           ) : (
             <p>Loading...</p>
