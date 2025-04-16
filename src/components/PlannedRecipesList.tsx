@@ -51,7 +51,7 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
   }
 
   function formatDate(dateString: string | undefined): string {
-    if (!dateString) return "";
+    if (!dateString) return "No Date";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" });
   }
