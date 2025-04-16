@@ -51,15 +51,26 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
           headers: { "X-CSRFToken": csrfToken },
           body: formData,
         });
-        const data = await response.json();
-        if (data.success) {
-          // Optionally, clear your form or provide user feedback here.
+        if (response.ok) {
+          // const data = await response.json();
+          // TODO apply optimistic UI pattern
           onRecipePlanned();
         } else {
-          console.error("Failed to save the item", data);
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch {
+            errorData = await response.text();
+          }
+          console.error(
+            "Failed to save the item. Status:",
+            response.status,
+            "Response:",
+            errorData
+          );
         }
       } catch (error) {
-        console.error("Error saving the item", error);
+        console.error("Error saving the item (Network or fetch error):", error);
       }
     }
   }
