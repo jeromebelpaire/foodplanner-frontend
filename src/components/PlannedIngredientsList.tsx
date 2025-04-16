@@ -10,6 +10,7 @@ interface recipeUpdateFlagProps {
 function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
   const { csrfToken } = useCSRF();
   interface IngredientInfo {
+    id: string;
     name: string;
     quantity: number;
     unit: string;
@@ -17,12 +18,8 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
     is_checked: boolean;
   }
 
-  interface IngredientCollection {
-    [key: string]: IngredientInfo;
-  }
-
   const { grocerylistid } = useParams();
-  const [plannedIngredients, setplannedIngredients] = useState<IngredientCollection>({});
+  const [plannedIngredients, setplannedIngredients] = useState<IngredientInfo[]>([]);
   const [isUpdating, setIsUpdating] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
@@ -35,46 +32,48 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
     setplannedIngredients(data);
   }
 
-  const handleCheckboxChange = async (ingredientKey: string) => {
-    setIsUpdating((prev) => ({ ...prev, [ingredientKey]: true }));
+  const handleCheckboxChange = async (itemId: string) => {
+    const currentItem = plannedIngredients.find((item) => item.id === itemId);
+    if (!currentItem) return;
 
-    setplannedIngredients((prev) => ({
-      ...prev,
-      [ingredientKey]: {
-        ...prev[ingredientKey],
-        is_checked: !prev[ingredientKey].is_checked,
-      },
-    }));
+    const newValue = !currentItem.is_checked;
+    setIsUpdating((prev) => ({ ...prev, [itemId]: true }));
+
+    setplannedIngredients((currentIngredients) =>
+      currentIngredients.map((item) =>
+        item.id === itemId ? { ...item, is_checked: newValue } : item
+      )
+    );
 
     try {
       // Send update to backend
-      await fetchFromBackend(`/api/recipes/update_grocerylistitem_state/`, {
-        method: "PUT",
+      const response = await fetchFromBackend(`/api/grocerylistitems/${itemId}/`, {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": csrfToken,
         },
         body: JSON.stringify({
-          grocerylists_id: grocerylistid,
-          ingredient_id: ingredientKey,
-          is_checked: !plannedIngredients[ingredientKey].is_checked,
+          is_checked: newValue,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update item. Status: ${response.status}.}`);
+      }
     } catch (error) {
       console.error("Failed to update ingredient status:", error);
 
       // Revert the optimistic update if request failed
-      setplannedIngredients((prev) => ({
-        ...prev,
-        [ingredientKey]: {
-          ...prev[ingredientKey],
-          is_checked: !prev[ingredientKey].is_checked,
-        },
-      }));
+      setplannedIngredients((currentIngredients) =>
+        currentIngredients.map((item) =>
+          item.id === itemId ? { ...item, is_checked: newValue } : item
+        )
+      );
 
       alert("Failed to update item status. Please try again.");
     } finally {
-      setIsUpdating((prev) => ({ ...prev, [ingredientKey]: false }));
+      setIsUpdating((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -82,13 +81,13 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
     <>
       <h2 className="my-2">Shopping List</h2>
       <ul className="list-group">
-        {Object.entries(plannedIngredients).map(([ingredientKey, ingredientInfo]) => (
-          <li key={ingredientKey} className="list-group-item">
+        {Object.values(plannedIngredients).map((ingredientInfo) => (
+          <li key={ingredientInfo.id} className="list-group-item">
             <input
               type="checkbox"
               checked={ingredientInfo.is_checked || false}
-              onChange={() => handleCheckboxChange(ingredientKey)}
-              disabled={isUpdating[ingredientKey]}
+              onChange={() => handleCheckboxChange(ingredientInfo.id)}
+              disabled={isUpdating[ingredientInfo.id]}
             />
             {` ${ingredientInfo.quantity} ${ingredientInfo.unit} ${ingredientInfo.name} `}
             <span className="small-text">{`for ${ingredientInfo.from_recipes}`}</span>
