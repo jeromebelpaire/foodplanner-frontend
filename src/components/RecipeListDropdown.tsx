@@ -56,12 +56,7 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
           // TODO apply optimistic UI pattern
           onRecipePlanned();
         } else {
-          let errorData;
-          try {
-            errorData = await response.json();
-          } catch {
-            errorData = await response.text();
-          }
+          const errorData = await response.json();
           console.error(
             "Failed to save the item. Status:",
             response.status,
