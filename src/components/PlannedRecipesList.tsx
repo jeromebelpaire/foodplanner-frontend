@@ -3,15 +3,23 @@ import { useParams } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useCSRF } from "./CSRFContext";
 
+interface Recipe {
+  title: string;
+}
+
+interface Ingredient {
+  name: string;
+  unit: string;
+}
+
 interface PlannedRecipe {
-  id?: string;
-  recipe_title?: string;
+  id: string;
   guests?: number;
   planned_on?: string;
-  ingredient_name?: string;
-  ingredient_unit?: string;
   quantity?: number;
   delete_url?: string;
+  recipe?: Recipe;
+  ingredient?: Ingredient;
 }
 
 interface PlannedRecipesListProps {
@@ -32,11 +40,13 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
   }, [type, grocerylistid, recipeUpdateFlag]);
 
   async function fetchPlannedRecipes(type: string, grocerylistid: string) {
-    const res = await fetchFromBackend(`/api/planned${type}s/?grocery_list=${grocerylistid}`);
+    const res = await fetchFromBackend(
+      `/api/groceries/planned-${type}s/?grocery_list=${grocerylistid}`
+    );
     const data = await res.json();
     const dataWithDeleteUrl = data.map((item: PlannedRecipe) => ({
       ...item,
-      delete_url: `api/planned${type}s/${item.id}/`,
+      delete_url: `api/groceries/planned-${type}s/${item.id}/`,
     }));
     setplannedRecipes(dataWithDeleteUrl);
   }
@@ -67,12 +77,12 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
           >
             {type === "recipe" ? (
               <span>
-                {formatDate(item.planned_on)} - {item.recipe_title} - {item.guests} guest
+                {formatDate(item.planned_on)} - {item.recipe?.title} - {item.guests} guest
                 {item.guests !== 1 ? "s" : ""}
               </span>
             ) : (
               <span>
-                {item.ingredient_name} - {item.quantity} {item.ingredient_unit}
+                {item.ingredient?.name} - {item.quantity} {item.ingredient?.unit}
               </span>
             )}
             <button

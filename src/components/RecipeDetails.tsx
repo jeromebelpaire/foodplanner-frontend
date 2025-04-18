@@ -28,14 +28,14 @@ function RecipeDetails() {
   }, [recipe_id, numberOfGuests]);
 
   async function fetchUpdatedIngredients(recipe_id: string, guests: number) {
-    const url = `/api/recipes/${recipe_id}/formatted_ingredients/?${guests}/`;
+    const url = `/api/recipes/recipes/${recipe_id}/formatted_ingredients/?${guests}/`;
     const res = await fetchFromBackend(url);
     const data = await res.json();
     setingredientList(data.ingredients);
   }
 
   async function fetchRecipeInfo(recipe_id: string) {
-    const url = `/api/recipes/${recipe_id}/`;
+    const url = `/api/recipes/recipes/${recipe_id}/`;
     const res = await fetchFromBackend(url);
     const data = await res.json();
     setrecipeInfo(data);

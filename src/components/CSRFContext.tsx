@@ -7,7 +7,7 @@ interface CSRFContextType {
 }
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
-let csrfRefreshUrl = "/recipes/csrf/";
+let csrfRefreshUrl = "/api/auth/csrf/";
 if (csrfRefreshUrl.startsWith("/")) {
   csrfRefreshUrl = `${backendUrl}${csrfRefreshUrl}`;
 }

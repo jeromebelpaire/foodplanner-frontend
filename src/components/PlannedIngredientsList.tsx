@@ -9,11 +9,16 @@ interface recipeUpdateFlagProps {
 
 function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
   const { csrfToken } = useCSRF();
+
+  interface Ingredient {
+    name: string;
+    unit: string;
+  }
+
   interface IngredientInfo {
     id: string;
-    name: string;
     quantity: number;
-    unit: string;
+    ingredient: Ingredient;
     from_recipes: string;
     is_checked: boolean;
   }
@@ -27,7 +32,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
   }, [grocerylistid, recipeUpdateFlag]);
 
   async function fetchPlannedIngredients(grocerylistid: string) {
-    const res = await fetchFromBackend(`/api/grocerylistitems/?grocery_list=${grocerylistid}`);
+    const res = await fetchFromBackend(`/api/groceries/items/?grocery_list=${grocerylistid}`);
     const data = await res.json();
     setplannedIngredients(data);
   }
@@ -47,7 +52,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
 
     try {
       // Send update to backend
-      const response = await fetchFromBackend(`/api/grocerylistitems/${itemId}/`, {
+      const response = await fetchFromBackend(`/api/groceries/items/${itemId}/`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -67,7 +72,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
       // Revert the optimistic update if request failed
       setplannedIngredients((currentIngredients) =>
         currentIngredients.map((item) =>
-          item.id === itemId ? { ...item, is_checked: newValue } : item
+          item.id === itemId ? { ...item, is_checked: currentItem.is_checked } : item
         )
       );
 
@@ -89,7 +94,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
               onChange={() => handleCheckboxChange(ingredientInfo.id)}
               disabled={isUpdating[ingredientInfo.id]}
             />
-            {` ${ingredientInfo.quantity} ${ingredientInfo.unit} ${ingredientInfo.name} `}
+            {` ${ingredientInfo.quantity} ${ingredientInfo.ingredient.unit} ${ingredientInfo.ingredient.name} `}
             <span className="small-text">{`for ${ingredientInfo.from_recipes}`}</span>
           </li>
         ))}

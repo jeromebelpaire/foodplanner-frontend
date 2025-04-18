@@ -16,7 +16,7 @@ function HomePage() {
   }, []);
 
   async function fetchAllRecipes() {
-    const res = await fetchFromBackend("/api/recipes/");
+    const res = await fetchFromBackend("/api/recipes/recipes/");
     const data = await res.json();
     setrecipes(data);
   }

@@ -1,18 +1,19 @@
 // PrivateRoute.js
 import { useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 
 export function PrivateRoute() {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const nextUrl = location.pathname + location.search;
-  const loginUrl = "/login/?next=" + encodeURIComponent(nextUrl);
+  const loginUrl = "/login?next=" + encodeURIComponent(nextUrl);
   useEffect(() => {
     // Check authentication status using the session cookie.
-    fetchFromBackend("/recipes/auth/status/", { credentials: "include" })
+    fetchFromBackend("/api/auth/status/", { credentials: "include" })
       .then((response) => {
         setAuthenticated(response.ok);
       })
@@ -21,11 +22,11 @@ export function PrivateRoute() {
   }, []);
 
   useEffect(() => {
-    // Once loading is complete, if not authenticated, redirect externally.
+    // Once loading is complete, if not authenticated, redirect using React Router.
     if (!loading && !authenticated) {
-      window.location.href = loginUrl;
+      navigate(loginUrl, { replace: true });
     }
-  }, [loading, authenticated, loginUrl]);
+  }, [loading, authenticated, loginUrl, navigate]);
 
   if (loading) {
     return <div>Loading...</div>;

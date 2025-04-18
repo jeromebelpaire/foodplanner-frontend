@@ -23,7 +23,7 @@ export async function fetchFromBackend(url: string, options: RequestInit = {}) {
 
   // If the response indicates a CSRF failure, try to refresh the token.
   if (response.status === 403) {
-    let csrfRefreshUrl = "/recipes/csrf/";
+    let csrfRefreshUrl = "/api/auth/csrf/";
     if (csrfRefreshUrl.startsWith("/")) {
       csrfRefreshUrl = `${backendUrl}${csrfRefreshUrl}`;
     }

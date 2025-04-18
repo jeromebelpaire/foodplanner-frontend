@@ -18,7 +18,7 @@ function Login() {
     e.preventDefault();
     setError("");
 
-    fetchFromBackend("/recipes/login/", {
+    fetchFromBackend("/api/auth/login/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

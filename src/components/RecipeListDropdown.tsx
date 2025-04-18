@@ -38,15 +38,18 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
   async function handlePost() {
     if (selectedRecipe && quantity && grocerylistid) {
       const formData = new FormData();
-      formData.append("grocery_list", grocerylistid);
-      formData.append(type == "recipe" ? "recipe" : "ingredient", selectedRecipe.value!.toString());
+      formData.append("grocery_list_id", grocerylistid);
+      formData.append(
+        type == "recipe" ? "recipe_id" : "ingredient_id",
+        selectedRecipe.value!.toString()
+      );
       formData.append(type == "recipe" ? "guests" : "quantity", quantity);
       if (type === "recipe") {
         formData.append("planned_on", recipeDate);
       }
 
       try {
-        const response = await fetchFromBackend(`/api/planned${type}s/`, {
+        const response = await fetchFromBackend(`/api/groceries/planned-${type}s/`, {
           method: "POST",
           headers: { "X-CSRFToken": csrfToken },
           body: formData,
@@ -77,8 +80,8 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
   const { grocerylistid } = useParams();
 
   async function fetchAllRecipes(type: string) {
-    const url_suffix = type == "recipe" ? "recipe" : "ingredient";
-    const res = await fetchFromBackend(`/api/${url_suffix}s/`);
+    const url_suffix = type == "recipe" ? "recipes/recipes" : "ingredients/ingredients";
+    const res = await fetchFromBackend(`/api/${url_suffix}/`);
     const data = await res.json();
     setrecipes(data);
   }

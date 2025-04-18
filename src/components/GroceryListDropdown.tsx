@@ -65,13 +65,13 @@ function GroceryListDropdown() {
   }
 
   async function fetchGroceryLists() {
-    const res = await fetchFromBackend("/api/grocerylists/");
+    const res = await fetchFromBackend("/api/groceries/lists/");
     const data = await res.json();
     setgroceryLists(data);
   }
 
   async function handleCreation(formData: FormData) {
-    const res = await fetchFromBackend(`/api/grocerylists/`, {
+    const res = await fetchFromBackend("/api/groceries/lists/", {
       method: "POST",
       headers: { "X-CSRFToken": csrfToken },
       body: formData,
