@@ -14,8 +14,9 @@ export function PrivateRoute() {
   useEffect(() => {
     // Check authentication status using the session cookie.
     fetchFromBackend("/api/auth/status/", { credentials: "include" })
-      .then((response) => {
-        setAuthenticated(response.ok);
+      .then((response) => response.json())
+      .then((data) => {
+        setAuthenticated(data.authenticated);
       })
       .catch(() => setAuthenticated(false))
       .finally(() => setLoading(false));
