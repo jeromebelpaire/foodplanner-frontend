@@ -28,7 +28,7 @@ function RecipeDetails() {
   }, [recipe_id, numberOfGuests]);
 
   async function fetchUpdatedIngredients(recipe_id: string, guests: number) {
-    const url = `/api/recipes/recipes/${recipe_id}/formatted_ingredients/?${guests}/`;
+    const url = `/api/recipes/recipes/${recipe_id}/formatted_ingredients/?guests=${guests}`;
     const res = await fetchFromBackend(url);
     const data = await res.json();
     setingredientList(data.ingredients);

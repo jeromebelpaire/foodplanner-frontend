@@ -31,7 +31,7 @@ export const EditRecipe: React.FC = () => {
             throw new Error(`Recipe fetch failed: ${response.statusText}`);
           }
         } else {
-          const data = await response.json();
+          const data: Recipe = await response.json();
           setRecipe(data);
         }
       } catch (err) {

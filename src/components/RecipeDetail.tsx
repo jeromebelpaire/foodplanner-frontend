@@ -161,13 +161,13 @@ export const RecipeDetail: React.FC = () => {
           <div className="flex space-x-2">
             <Link
               to={`/recipes/${id}/edit`}
-              className="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600 transition duration-150 ease-in-out"
+              className="px-3 py-1 text-sm bg-yellow-500 text-black rounded hover:bg-yellow-600 transition duration-150 ease-in-out"
             >
               Edit
             </Link>
             <button
               onClick={handleDeleteRecipe}
-              className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition duration-150 ease-in-out"
+              className="px-3 py-1 text-sm bg-red-500 text-black rounded hover:bg-red-600 transition duration-150 ease-in-out"
               aria-label={`Delete recipe ${recipe.title}`}
             >
               Delete
