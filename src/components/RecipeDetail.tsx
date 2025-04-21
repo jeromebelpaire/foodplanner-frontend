@@ -117,15 +117,15 @@ export const RecipeDetail: React.FC = () => {
   };
 
   // Loading and Error States
-  if (loading) return <div className="text-center p-6">Loading recipe...</div>;
+  if (loading) return <div className="text-center p-3">Loading recipe...</div>;
   // Display specific error, fallback to generic message
   if (error)
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="text-red-600 p-4 bg-red-100 rounded">Error: {error}</div>
+      <div className="container py-4">
+        <div className="alert alert-danger">Error: {error}</div>
       </div>
     );
-  if (!recipe) return <div className="text-center p-6">Recipe not found</div>;
+  if (!recipe) return <div className="text-center p-3">Recipe not found</div>;
 
   // Format dates nicely
   const formatDate = (dateString: string | undefined) => {
@@ -138,13 +138,15 @@ export const RecipeDetail: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="container py-4">
       {/* Back link and Edit/Delete buttons */}
-      <div className="flex justify-between items-center mb-4">
-        <Link to="/recipes" className="text-blue-600 hover:text-blue-800 flex items-center">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <Link to="/recipes" className="text-decoration-none d-flex align-items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-1"
+            className="me-1"
+            width="20"
+            height="20"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -158,16 +160,13 @@ export const RecipeDetail: React.FC = () => {
         </Link>
 
         {canEditRecipe() && (
-          <div className="flex space-x-2">
-            <Link
-              to={`/recipes/${id}/edit`}
-              className="px-3 py-1 text-sm bg-yellow-500 text-black rounded hover:bg-yellow-600 transition duration-150 ease-in-out"
-            >
+          <div className="d-flex gap-2">
+            <Link to={`/recipes/${id}/edit`} className="btn btn-warning btn-sm">
               Edit
             </Link>
             <button
               onClick={handleDeleteRecipe}
-              className="px-3 py-1 text-sm bg-red-500 text-black rounded hover:bg-red-600 transition duration-150 ease-in-out"
+              className="btn btn-danger btn-sm"
               aria-label={`Delete recipe ${recipe.title}`}
             >
               Delete
@@ -177,83 +176,90 @@ export const RecipeDetail: React.FC = () => {
       </div>
 
       {/* Recipe Content */}
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <h1 className="text-3xl font-bold mb-2 break-words">{recipe.title}</h1>
-        <div className="text-gray-600 text-sm mb-4 space-x-2">
-          <span>By {recipe.author_username || "Unknown Author"}</span>
-          <span>&bull;</span>
-          <span>Created: {formatDate(recipe.created_on)}</span>
-          {recipe.updated_on && recipe.updated_on !== recipe.created_on && (
-            <span className="text-gray-500">(Updated: {formatDate(recipe.updated_on)})</span>
-          )}
-        </div>
-
-        {recipe.image && typeof recipe.image === "string" && (
-          <img
-            src={recipe.image}
-            alt={recipe.title}
-            className="w-full max-h-96 object-cover rounded-md mb-6 shadow"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "/placeholder-image.svg";
-            }} // Handle image load errors
-          />
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Instructions */}
-          <div className="md:col-span-2">
-            <h2 className="text-2xl font-semibold mb-3">Instructions</h2>
-            {/* Using prose for better typography, check if Tailwind typography plugin is installed */}
-            <div className="prose max-w-none text-gray-700">
-              {recipe.content
-                .split("\n")
-                .filter((p) => p.trim() !== "")
-                .map((paragraph, i) => (
-                  <p key={i}>{paragraph}</p>
-                ))}
-              {recipe.content.trim() === "" && (
-                <p className="italic text-gray-500">No instructions provided.</p>
-              )}
-            </div>
+      <div className="card shadow mb-4">
+        <div className="card-body">
+          <h1 className="display-5 fw-bold mb-2 text-break">{recipe.title}</h1>
+          <div className="text-muted small mb-4">
+            <span>By {recipe.author_username || "Unknown Author"}</span>
+            <span className="mx-1">&bull;</span>
+            <span>Created: {formatDate(recipe.created_on)}</span>
+            {recipe.updated_on && recipe.updated_on !== recipe.created_on && (
+              <span className="text-muted">(Updated: {formatDate(recipe.updated_on)})</span>
+            )}
           </div>
 
-          {/* Ingredients */}
-          <div className="md:col-span-1">
-            <div className="bg-gray-50 p-4 rounded-lg sticky top-4 border">
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-xl font-semibold">Ingredients</h2>
-                <div className="flex items-center space-x-2">
-                  <label htmlFor="guestCount" className="text-sm font-medium">
-                    Guests:
-                  </label>
-                  <input
-                    id="guestCount"
-                    type="number"
-                    min="1"
-                    value={guestCount}
-                    onChange={(e) => updateGuestCount(parseInt(e.target.value) || 1)}
-                    className="w-16 p-1 border rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    aria-label="Number of guests"
-                    disabled={loadingIngredients} // Disable while loading new count
-                  />
+          {recipe.image && typeof recipe.image === "string" && (
+            <img
+              src={recipe.image}
+              alt={recipe.title}
+              className="img-fluid rounded mb-4 shadow-sm"
+              style={{ maxHeight: "400px", objectFit: "cover", width: "100%" }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/placeholder-image.svg";
+              }} // Handle image load errors
+            />
+          )}
+
+          <div className="row">
+            {/* Instructions */}
+            <div className="col-md-8 mb-3 mb-md-0">
+              <h2 className="h4 fw-semibold mb-3">Instructions</h2>
+              <div className="text-secondary">
+                {recipe.content
+                  .split("\n")
+                  .filter((p) => p.trim() !== "")
+                  .map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))}
+                {recipe.content.trim() === "" && (
+                  <p className="fst-italic text-muted">No instructions provided.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Ingredients */}
+            <div className="col-md-4">
+              <div className="card bg-light sticky-top" style={{ top: "1rem" }}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h2 className="h5 fw-semibold mb-0">Ingredients</h2>
+                    <div className="d-flex align-items-center">
+                      <label htmlFor="guestCount" className="form-label small me-2 mb-0">
+                        Guests:
+                      </label>
+                      <input
+                        id="guestCount"
+                        type="number"
+                        min="1"
+                        value={guestCount}
+                        onChange={(e) => updateGuestCount(parseInt(e.target.value) || 1)}
+                        className="form-control form-control-sm"
+                        style={{ width: "4rem" }}
+                        aria-label="Number of guests"
+                        disabled={loadingIngredients} // Disable while loading new count
+                      />
+                    </div>
+                  </div>
+
+                  {loadingIngredients ? (
+                    <div className="text-center text-muted small py-3">Updating ingredients...</div>
+                  ) : (
+                    <ul className="list-group list-group-flush">
+                      {scaledIngredients.length > 0 ? (
+                        scaledIngredients.map((item, i) => (
+                          <li key={i} className="list-group-item bg-transparent px-0 py-1 border-0">
+                            {item}
+                          </li>
+                        ))
+                      ) : (
+                        <li className="list-group-item bg-transparent px-0 py-1 border-0 fst-italic text-muted">
+                          No ingredients listed for this recipe.
+                        </li>
+                      )}
+                    </ul>
+                  )}
                 </div>
               </div>
-
-              {loadingIngredients ? (
-                <div className="text-center text-gray-500 text-sm py-4">
-                  Updating ingredients...
-                </div>
-              ) : (
-                <ul className="space-y-2 list-disc list-inside text-gray-700">
-                  {scaledIngredients.length > 0 ? (
-                    scaledIngredients.map((item, i) => <li key={i}>{item}</li>)
-                  ) : (
-                    <li className="italic text-gray-500 list-none">
-                      No ingredients listed for this recipe.
-                    </li>
-                  )}
-                </ul>
-              )}
             </div>
           </div>
         </div>

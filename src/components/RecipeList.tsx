@@ -92,85 +92,74 @@ export const RecipeList: React.FC = () => {
     return currentUser.is_superuser || recipe.author_username === currentUser.username;
   };
 
-  if (loading) return <div className="text-center p-4">Loading recipes...</div>;
-  if (error) return <div className="text-red-500 p-4 bg-red-100 rounded">Error: {error}</div>;
+  if (loading) return <div className="text-center p-3">Loading recipes...</div>;
+  if (error) return <div className="alert alert-danger">Error: {error}</div>;
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">All Recipes</h1>
-        <Link
-          to="/recipes/new"
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition duration-150 ease-in-out"
-        >
+    <div className="container py-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="display-5 fw-bold">All Recipes</h1>
+        <Link to="/recipes/new" className="btn btn-success">
           Create New Recipe
         </Link>
       </div>
 
       {recipes.length === 0 ? (
-        <p className="text-gray-600 italic">No recipes found. Create your first one!</p>
+        <p className="text-muted fst-italic">No recipes found. Create your first one!</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
           {recipes.map((recipe) => (
-            <div
-              key={recipe.id}
-              className="border rounded-lg shadow hover:shadow-md transition-shadow duration-200 overflow-hidden flex flex-col"
-            >
-              {/* Link wrapping the image and title for better navigation */}
-              <Link to={`/recipes/${recipe.id}`} className="block">
-                {recipe.image && (
-                  <img
-                    src={typeof recipe.image === "string" ? recipe.image : "/placeholder-image.svg"} // Provide a placeholder
-                    alt={recipe.title}
-                    className="w-full h-48 object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/placeholder-image.svg";
-                    }} // Handle image load errors
-                  />
-                )}
-                <div className="p-4">
-                  <h2 className="text-xl font-semibold mb-1 truncate" title={recipe.title}>
-                    {recipe.title}
-                  </h2>
-                </div>
-              </Link>
-              <div className="p-4 pt-0 mt-auto">
-                {" "}
-                {/* Push controls to bottom */}
-                <p className="text-gray-600 text-sm mb-1">
-                  By {recipe.author_username || "Unknown"}
-                </p>
-                <p className="text-gray-500 text-sm mb-3">
-                  {recipe.created_on
-                    ? new Date(recipe.created_on).toLocaleDateString()
-                    : "Date unknown"}
-                </p>
-                <div className="flex flex-wrap gap-2 items-center border-t pt-3">
-                  <Link
-                    to={`/recipes/${recipe.id}`}
-                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-150 ease-in-out"
-                  >
-                    View
-                  </Link>
-
-                  {canEditRecipe(recipe) && (
-                    <>
-                      <Link
-                        to={`/recipes/${recipe.id}/edit`}
-                        className="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600 transition duration-150 ease-in-out"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => recipe.id && handleDeleteRecipe(recipe.id)}
-                        className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition duration-150 ease-in-out"
-                        aria-label={`Delete recipe ${recipe.title}`}
-                        disabled={!recipe.id} // Disable if id is missing
-                      >
-                        Delete
-                      </button>
-                    </>
+            <div key={recipe.id} className="col">
+              <div className="card h-100 shadow-sm hover-shadow">
+                {/* Link wrapping the image and title for better navigation */}
+                <Link to={`/recipes/${recipe.id}`} className="text-decoration-none">
+                  {recipe.image && (
+                    <img
+                      src={
+                        typeof recipe.image === "string" ? recipe.image : "/placeholder-image.svg"
+                      } // Provide a placeholder
+                      alt={recipe.title}
+                      className="card-img-top"
+                      style={{ height: "192px", objectFit: "cover" }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder-image.svg";
+                      }} // Handle image load errors
+                    />
                   )}
+                  <div className="card-body pb-0">
+                    <h5 className="card-title text-truncate" title={recipe.title}>
+                      {recipe.title}
+                    </h5>
+                  </div>
+                </Link>
+                <div className="card-body pt-0 d-flex flex-column">
+                  <p className="text-muted small mb-1">By {recipe.author_username || "Unknown"}</p>
+                  <p className="text-muted small mb-3">
+                    {recipe.created_on
+                      ? new Date(recipe.created_on).toLocaleDateString()
+                      : "Date unknown"}
+                  </p>
+                  <div className="d-flex flex-wrap gap-2 border-top pt-3 mt-auto">
+                    <Link to={`/recipes/${recipe.id}`} className="btn btn-primary btn-sm">
+                      View
+                    </Link>
+
+                    {canEditRecipe(recipe) && (
+                      <>
+                        <Link to={`/recipes/${recipe.id}/edit`} className="btn btn-edit btn-sm">
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => recipe.id && handleDeleteRecipe(recipe.id)}
+                          className="btn btn-danger btn-sm"
+                          aria-label={`Delete recipe ${recipe.title}`}
+                          disabled={!recipe.id} // Disable if id is missing
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -177,13 +177,13 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-xl font-bold">{recipe ? "Edit Recipe" : "Create New Recipe"}</h2>
+    <form onSubmit={handleSubmit} className="mb-4">
+      <h2 className="h4 fw-bold mb-3">{recipe ? "Edit Recipe" : "Create New Recipe"}</h2>
 
-      {error && <div className="p-2 bg-red-100 text-red-700 rounded">{error}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
 
-      <div>
-        <label htmlFor="title" className="block font-medium">
+      <div className="mb-3">
+        <label htmlFor="title" className="form-label fw-medium">
           Title
         </label>
         <input
@@ -191,26 +191,27 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-2 border rounded"
+          className="form-control"
           required
         />
       </div>
 
-      <div>
-        <label htmlFor="content" className="block font-medium">
+      <div className="mb-3">
+        <label htmlFor="content" className="form-label fw-medium">
           Content
         </label>
         <textarea
           id="content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full p-2 border rounded min-h-[150px]"
+          className="form-control"
+          style={{ minHeight: "150px" }}
           required
         />
       </div>
 
-      <div>
-        <label htmlFor="image" className="block font-medium">
+      <div className="mb-3">
+        <label htmlFor="image" className="form-label fw-medium">
           Image
         </label>
         <input
@@ -218,11 +219,16 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           type="file"
           accept="image/*"
           onChange={handleImageChange}
-          className="w-full p-2 border rounded"
+          className="form-control"
         />
         {imagePreview && (
           <div className="mt-2">
-            <img src={imagePreview} alt="Preview" className="max-h-40 object-cover rounded" />
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="img-thumbnail"
+              style={{ maxHeight: "160px", objectFit: "cover" }}
+            />
             {recipe?.id && (
               <button
                 type="button"
@@ -230,7 +236,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
                   setImage(null);
                   setImagePreview(null);
                 }}
-                className="mt-1 text-xs text-red-600 hover:text-red-800"
+                className="btn btn-link btn-sm text-danger p-0 mt-1"
               >
                 Remove Image
               </button>
@@ -239,13 +245,13 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         )}
       </div>
 
-      <div>
-        <div className="flex justify-between items-center">
-          <label className="block font-medium">Ingredients</label>
+      <div className="mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <label className="form-label fw-medium mb-0">Ingredients</label>
           <button
             type="button"
             onClick={handleAddIngredient}
-            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+            className="btn btn-primary btn-sm"
             disabled={availableIngredients.length === 0}
           >
             Add Ingredient
@@ -253,13 +259,13 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         </div>
 
         {availableIngredients.length === 0 && !error && (
-          <p className="text-gray-500 italic mt-2">Loading available ingredients...</p>
+          <p className="text-muted fst-italic">Loading available ingredients...</p>
         )}
         {ingredients.length === 0 && availableIngredients.length > 0 && (
-          <p className="text-gray-500 italic mt-2">No ingredients added yet.</p>
+          <p className="text-muted fst-italic">No ingredients added yet.</p>
         )}
 
-        <div className="space-y-3 mt-2">
+        <div className="mb-3">
           {ingredients.map((ingredient, index) => {
             const selectedIngredientInfo = availableIngredients.find(
               (ing) => ing.id === ingredient.ingredient_id
@@ -267,14 +273,14 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
             return (
               <div
                 key={index}
-                className="flex items-center space-x-2 p-2 border rounded bg-gray-50"
+                className="d-flex align-items-center gap-2 mb-2 p-2 border rounded bg-light"
               >
                 <select
                   value={ingredient.ingredient_id}
                   onChange={(e) =>
                     handleIngredientChange(index, "ingredient_id", parseInt(e.target.value))
                   }
-                  className="flex-grow p-2 border rounded"
+                  className="form-select"
                   required
                 >
                   <option value="0" disabled>
@@ -294,13 +300,15 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
                     handleIngredientChange(index, "quantity", parseFloat(e.target.value) || 0)
                   }
                   placeholder="Quantity"
-                  className="w-24 p-2 border rounded text-right"
+                  className="form-control text-end"
+                  style={{ width: "100px" }}
                   min="0.01"
                   step="any"
                   required
                 />
                 <span
-                  className="w-16 text-gray-600 truncate"
+                  className="text-muted text-truncate"
+                  style={{ width: "65px" }}
                   title={selectedIngredientInfo?.unit || ""}
                 >
                   {selectedIngredientInfo?.unit || "unit"}
@@ -309,7 +317,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
                 <button
                   type="button"
                   onClick={() => handleRemoveIngredient(index)}
-                  className="p-1 text-red-500 hover:text-red-700"
+                  className="btn btn-link text-danger p-1"
                   title="Remove Ingredient"
                 >
                   &times;
@@ -320,20 +328,16 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         </div>
       </div>
 
-      <div className="flex justify-end space-x-2 pt-4 border-t mt-6">
+      <div className="d-flex justify-content-end gap-2 pt-3 border-top mt-4">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border rounded hover:bg-gray-100"
+          className="btn btn-outline-secondary"
           disabled={loading}
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-          disabled={loading || !title || !content}
-        >
+        <button type="submit" className="btn btn-success" disabled={loading || !title || !content}>
           {loading ? "Saving..." : recipe ? "Update Recipe" : "Create Recipe"}
         </button>
       </div>
