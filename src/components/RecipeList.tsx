@@ -146,7 +146,7 @@ export const RecipeList: React.FC = () => {
 
                     {canEditRecipe(recipe) && (
                       <>
-                        <Link to={`/recipes/${recipe.id}/edit`} className="btn btn-edit btn-sm">
+                        <Link to={`/recipes/${recipe.id}/edit`} className="btn btn-info btn-sm">
                           Edit
                         </Link>
                         <button
