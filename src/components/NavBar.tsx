@@ -1,10 +1,9 @@
 function NavBar() {
-  const adminURL = import.meta.env.VITE_DJANGO_ADMIN_URL;
   return (
     <div>
       <nav className="navbar navbar-expand-lg navbar-dark dark-navbar">
         <div className="container-fluid">
-          <a className="navbar-brand" href="#">
+          <a className="navbar-brand" href="/">
             Foodplanner
           </a>
           <button
@@ -22,30 +21,22 @@ function NavBar() {
             <ul className="navbar-nav">
               <li className="nav-item">
                 <a className="nav-link active" aria-current="page" href="/">
-                  Home
+                  Explore Recipes
                 </a>
               </li>
               <li className="nav-item">
                 <a className="nav-link active" aria-current="page" href="/grocery-lists">
-                  Shopping Lists
+                  My Shopping Lists
                 </a>
               </li>
               <li className="nav-item">
-                <a
-                  className="nav-link active"
-                  aria-current="page"
-                  href={`${adminURL}/recipes/recipe/add/`}
-                >
-                  Add a recipe
+                <a className="nav-link active" aria-current="page" href={`/recipes/new/`}>
+                  New Recipe
                 </a>
               </li>
               <li className="nav-item">
-                <a
-                  className="nav-link active"
-                  aria-current="page"
-                  href={`${adminURL}/recipes/recipe/`}
-                >
-                  Manage recipes
+                <a className="nav-link active" aria-current="page" href={`/recipes/`}>
+                  My Recipes
                 </a>
               </li>
             </ul>
