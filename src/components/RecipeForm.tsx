@@ -136,10 +136,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
       if (image) {
         formData.append("image", image);
       } else if (recipe?.id && !imagePreview) {
-        // If editing and preview is cleared (meaning user removed image), signal removal.
-        // How to signal removal depends on the backend (e.g., send 'image': null or specific flag).
-        // Sending an empty string or not sending the field might work. Check backend API docs.
-        // formData.append("image", ""); // Example: Send empty string - ADJUST BASED ON BACKEND
+        formData.append("remove_image", "true");
       }
 
       const ingredientsPayload = validIngredients.map(({ ingredient_id, quantity }) => ({

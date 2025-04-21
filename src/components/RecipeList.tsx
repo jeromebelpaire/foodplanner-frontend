@@ -23,7 +23,7 @@ export const RecipeList: React.FC = () => {
         // Use Promise.all to fetch user and recipes concurrently
         const [userResponse, recipesResponse] = await Promise.all([
           fetchFromBackend("/api/auth/status/", { credentials: "include" }),
-          fetchFromBackend("/api/recipes/recipes/", { credentials: "include" }),
+          fetchFromBackend("/api/recipes/recipes/?mine=true", { credentials: "include" }),
         ]);
 
         // Check responses
