@@ -205,13 +205,9 @@ export const RecipeDetail: React.FC = () => {
             <div className="col-md-8 mb-3 mb-md-0">
               <h2 className="h4 fw-semibold mb-3">Instructions</h2>
               <div className="text-secondary">
-                {recipe.content
-                  .split("\n")
-                  .filter((p) => p.trim() !== "")
-                  .map((paragraph, i) => (
-                    <p key={i}>{paragraph}</p>
-                  ))}
-                {recipe.content.trim() === "" && (
+                {recipe.content ? (
+                  <div dangerouslySetInnerHTML={{ __html: recipe.content }} />
+                ) : (
                   <p className="fst-italic text-muted">No instructions provided.</p>
                 )}
               </div>

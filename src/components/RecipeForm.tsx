@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Recipe, Ingredient, RecipeIngredient } from "../types/Recipe";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useCSRF } from "./CSRFContext";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 interface RecipeFormProps {
   recipe?: Recipe;
@@ -20,7 +22,19 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
   const [error, setError] = useState("");
   const { csrfToken } = useCSRF();
 
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: content,
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML());
+    },
+  });
+
   useEffect(() => {
+    if (editor && recipe?.content) {
+      editor.commands.setContent(recipe.content);
+    }
+
     const fetchIngredients = async () => {
       try {
         const response = await fetchFromBackend("/api/ingredients/ingredients/", {
@@ -56,7 +70,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         setIngredients(initialIngredients);
       }
     }
-  }, [recipe]);
+  }, [recipe, editor]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -176,6 +190,83 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
     }
   };
 
+  const MenuBar = () => {
+    if (!editor) {
+      return null;
+    }
+
+    return (
+      <div className="btn-toolbar mb-2" role="toolbar" aria-label="Text formatting">
+        <div className="btn-group me-2" role="group" aria-label="Basic formatting">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            disabled={!editor.can().chain().focus().toggleBold().run()}
+            className={`btn btn-sm ${
+              editor.isActive("bold") ? "btn-primary" : "btn-outline-primary"
+            }`}
+            title="Bold (Ctrl+B)"
+          >
+            Bold
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            disabled={!editor.can().chain().focus().toggleItalic().run()}
+            className={`btn btn-sm ${
+              editor.isActive("italic") ? "btn-primary" : "btn-outline-primary"
+            }`}
+            title="Italic (Ctrl+I)"
+          >
+            Italic
+          </button>
+        </div>
+        <div className="btn-group me-2" role="group" aria-label="Headings">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={`btn btn-sm ${
+              editor.isActive("heading", { level: 1 }) ? "btn-primary" : "btn-outline-primary"
+            }`}
+          >
+            H1
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={`btn btn-sm ${
+              editor.isActive("heading", { level: 2 }) ? "btn-primary" : "btn-outline-primary"
+            }`}
+          >
+            H2
+          </button>
+        </div>
+        <div className="btn-group" role="group" aria-label="Lists">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`btn btn-sm ${
+              editor.isActive("bulletList") ? "btn-primary" : "btn-outline-primary"
+            }`}
+            title="Bullet List"
+          >
+            Bullet List
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`btn btn-sm ${
+              editor.isActive("orderedList") ? "btn-primary" : "btn-outline-primary"
+            }`}
+            title="Numbered List"
+          >
+            Numbered List
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <form onSubmit={handleSubmit} className="mb-4">
       <h2 className="h4 fw-bold mb-3">{recipe ? "Edit Recipe" : "Create New Recipe"}</h2>
@@ -198,16 +289,18 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
 
       <div className="mb-3">
         <label htmlFor="content" className="form-label fw-medium">
-          Content
+          Instructions
         </label>
-        <textarea
-          id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="form-control"
-          style={{ minHeight: "150px" }}
-          required
-        />
+        <div className="border rounded">
+          <MenuBar />
+          <div className="p-2">
+            <EditorContent
+              editor={editor}
+              className="form-control p-0 border-0"
+              style={{ minHeight: "150px" }}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="mb-3">
