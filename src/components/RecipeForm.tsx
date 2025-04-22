@@ -262,7 +262,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
             H2
           </button>
         </div>
-        <div className="btn-group" role="group" aria-label="Lists">
+        <div className="btn-group me-2" role="group" aria-label="Lists">
           <button
             type="button"
             onMouseDown={(event) => {
@@ -288,6 +288,19 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
             title="Numbered List"
           >
             Numbered List
+          </button>
+        </div>
+        <div className="btn-group me-2" role="group" aria-label="Other">
+          <button
+            type="button"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              editor.chain().focus().setHorizontalRule().run();
+            }}
+            className="btn btn-sm btn-outline-primary"
+            title="Horizontal Rule"
+          >
+            Horizontal Rule
           </button>
         </div>
       </div>
