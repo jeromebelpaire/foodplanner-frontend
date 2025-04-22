@@ -1,6 +1,6 @@
 // src/components/RecipeDetail.tsx
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Recipe } from "../types/Recipe";
 import { User } from "../types/User";
 import { fetchFromBackend } from "./fetchFromBackend";
@@ -9,6 +9,8 @@ import { fetchFromBackend } from "./fetchFromBackend";
 export const RecipeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPage = location.state?.from || "home";
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -141,7 +143,10 @@ export const RecipeDetail: React.FC = () => {
     <div className="container py-4">
       {/* Back link and Edit/Delete buttons */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <Link to="/recipes" className="text-decoration-none d-flex align-items-center">
+        <Link
+          to={fromPage === "recipes" ? "/recipes" : "/"}
+          className="text-decoration-none d-flex align-items-center"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="me-1"

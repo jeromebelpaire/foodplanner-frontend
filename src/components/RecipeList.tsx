@@ -112,7 +112,11 @@ export const RecipeList: React.FC = () => {
             <div key={recipe.id} className="col">
               <div className="card h-100 shadow-sm hover-shadow">
                 {/* Link wrapping the image and title for better navigation */}
-                <Link to={`/recipes/${recipe.id}`} className="text-decoration-none">
+                <Link
+                  to={`/recipes/${recipe.id}`}
+                  state={{ from: "recipes" }}
+                  className="text-decoration-none"
+                >
                   {recipe.image && (
                     <img
                       src={
@@ -140,7 +144,11 @@ export const RecipeList: React.FC = () => {
                       : "Date unknown"}
                   </p>
                   <div className="d-flex flex-wrap gap-2 border-top pt-3 mt-auto">
-                    <Link to={`/recipes/${recipe.id}`} className="btn btn-primary btn-sm">
+                    <Link
+                      to={`/recipes/${recipe.id}`}
+                      state={{ from: "recipes" }}
+                      className="btn btn-primary btn-sm"
+                    >
                       View
                     </Link>
 

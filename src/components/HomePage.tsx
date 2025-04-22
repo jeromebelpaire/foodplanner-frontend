@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
+import { Link } from "react-router-dom";
 
 interface Recipe {
   title?: string;
@@ -34,9 +35,13 @@ function HomePage() {
                   <h5 className="card-title">{recipe.title}</h5>
                 </div>
                 <div className="card-footer">
-                  <a href={`/recipe/${recipe.id}/${recipe.slug}`} className="btn btn-primary">
+                  <Link
+                    to={`/recipes/${recipe.id}`}
+                    state={{ from: "home" }}
+                    className="btn btn-primary"
+                  >
                     Read More
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
