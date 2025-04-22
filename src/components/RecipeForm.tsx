@@ -24,6 +24,15 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
 
   const editor = useEditor({
     extensions: [StarterKit],
+    // Add editorProps to style the editable area directly
+    editorProps: {
+      attributes: {
+        // FIXME: This is a hack to get the editor to look good.
+        // Add Bootstrap padding classes directly to the editor
+        // This targets the <div class="ProseMirror"> element
+        class: "p-3", // Use p-2 or p-3 as needed
+      },
+    },
     content: content,
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML());
