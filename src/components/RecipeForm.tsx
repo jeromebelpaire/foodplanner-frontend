@@ -209,7 +209,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         <div className="btn-group me-2" role="group" aria-label="Basic formatting">
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleBold().run()}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              editor.chain().focus().toggleBold().run();
+            }}
             disabled={!editor.can().chain().focus().toggleBold().run()}
             className={`btn btn-sm ${
               editor.isActive("bold") ? "btn-primary" : "btn-outline-primary"
@@ -220,7 +223,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           </button>
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              editor.chain().focus().toggleItalic().run();
+            }}
             disabled={!editor.can().chain().focus().toggleItalic().run()}
             className={`btn btn-sm ${
               editor.isActive("italic") ? "btn-primary" : "btn-outline-primary"
@@ -233,7 +239,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         <div className="btn-group me-2" role="group" aria-label="Headings">
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              editor.chain().focus().toggleHeading({ level: 1 }).run();
+            }}
             className={`btn btn-sm ${
               editor.isActive("heading", { level: 1 }) ? "btn-primary" : "btn-outline-primary"
             }`}
@@ -242,7 +251,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           </button>
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              editor.chain().focus().toggleHeading({ level: 2 }).run();
+            }}
             className={`btn btn-sm ${
               editor.isActive("heading", { level: 2 }) ? "btn-primary" : "btn-outline-primary"
             }`}
@@ -253,7 +265,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         <div className="btn-group" role="group" aria-label="Lists">
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              editor.chain().focus().toggleBulletList().run();
+            }}
             className={`btn btn-sm ${
               editor.isActive("bulletList") ? "btn-primary" : "btn-outline-primary"
             }`}
@@ -263,7 +278,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           </button>
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              editor.chain().focus().toggleOrderedList().run();
+            }}
             className={`btn btn-sm ${
               editor.isActive("orderedList") ? "btn-primary" : "btn-outline-primary"
             }`}
