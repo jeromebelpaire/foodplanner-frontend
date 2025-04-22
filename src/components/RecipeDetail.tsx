@@ -210,6 +210,9 @@ export const RecipeDetail: React.FC = () => {
                 ) : (
                   <p className="fst-italic text-muted">No instructions provided.</p>
                 )}
+                {recipe.content.trim() === "" && (
+                  <p className="fst-italic text-muted">No instructions provided.</p>
+                )}
               </div>
             </div>
 
