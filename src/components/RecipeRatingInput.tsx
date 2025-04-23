@@ -10,9 +10,6 @@ interface RecipeRatingInputProps {
   onRatingSubmitted: () => void; // Callback to refetch recipe details
 }
 
-// Represents a single star's state
-type StarDisplay = "empty" | "half" | "full";
-
 const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
   recipeId,
   initialRating,
@@ -34,8 +31,14 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
     setCurrentRatingId(ratingId);
   }, [initialRating, ratingId]);
 
-  const handleMouseEnter = (index: number) => {
-    setHoverRating(index + 0.5); // Hover over star 'i' means rating 'i + 0.5'
+  // Set hover rating to full stars (1, 2, 3, etc.)
+  const handleFullStarHover = (value: number) => {
+    setHoverRating(value);
+  };
+
+  // Set hover rating to half stars (0.5, 1.5, 2.5, etc.)
+  const handleHalfStarHover = (value: number) => {
+    setHoverRating(value - 0.5);
   };
 
   const handleMouseLeave = () => {
@@ -56,7 +59,6 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
       return;
     }
 
-    // const clickedUiRating = index + 0.5; // OLD: Always set half star
     const backendRating = Math.round(clickedUiRating * 2); // Convert 0-5 UI scale to 0-10 backend scale
 
     setIsSubmitting(true);
@@ -107,45 +109,73 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
   // Determine which rating to display (hover or selected)
   const displayRating = hoverRating ?? selectedRating;
 
-  const stars: StarDisplay[] = Array(5).fill("empty");
-  if (displayRating !== null) {
-    const fullStars = Math.floor(displayRating);
-    const hasHalfStar = displayRating % 1 !== 0;
+  // Calculate the star display state for each of the 5 stars
+  const renderStars = () => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      // Determine if this star should be full, half, or empty
+      let starType = "empty";
+      if (displayRating !== null) {
+        if (i <= Math.floor(displayRating)) {
+          starType = "full";
+        } else if (i - 0.5 <= displayRating) {
+          starType = "half";
+        }
+      }
 
-    for (let i = 0; i < fullStars; i++) {
-      stars[i] = "full";
-    }
-    if (hasHalfStar && fullStars < 5) {
-      stars[fullStars] = "half";
-    }
-  }
+      stars.push(
+        <div
+          key={i}
+          className="position-relative d-inline-block mx-1"
+          style={{ cursor: "pointer" }}
+        >
+          {/* Base star - use empty star as base */}
+          <i className="bi bi-star text-warning fs-4" />
 
-  const getStarClass = (starType: StarDisplay): string => {
-    switch (starType) {
-      case "full":
-        return "bi-star-fill";
-      case "half":
-        return "bi-star-half";
-      default:
-        return "bi-star";
+          {/* Clickable areas (invisible) */}
+          <div
+            className="position-absolute top-0 start-0 bottom-0 w-50"
+            style={{ cursor: "pointer" }}
+            onMouseEnter={() => handleHalfStarHover(i)}
+            onClick={handleClick}
+            role="button"
+            aria-label={`Rate ${i - 0.5} stars`}
+            title={`${i - 0.5} stars`}
+          />
+          <div
+            className="position-absolute top-0 end-0 bottom-0 w-50"
+            style={{ cursor: "pointer" }}
+            onMouseEnter={() => handleFullStarHover(i)}
+            onClick={handleClick}
+            role="button"
+            aria-label={`Rate ${i} stars`}
+            title={`${i} stars`}
+          />
+
+          {/* Visual star state overlays */}
+          {starType === "half" && (
+            <i
+              className="bi bi-star-half text-warning fs-4 position-absolute top-0 start-0"
+              style={{ pointerEvents: "none" }}
+            />
+          )}
+          {starType === "full" && (
+            <i
+              className="bi bi-star-fill text-warning fs-4 position-absolute top-0 start-0"
+              style={{ pointerEvents: "none" }}
+            />
+          )}
+        </div>
+      );
     }
+    return stars;
   };
 
   return (
     <div className="mt-4 p-3 border rounded bg-light">
       <h5 className="mb-3">Rate this recipe:</h5>
       <div className="d-flex align-items-center mb-2" onMouseLeave={handleMouseLeave}>
-        {stars.map((starType, index) => (
-          <i
-            key={index}
-            className={`bi ${getStarClass(starType)} text-warning fs-4 mx-1`}
-            style={{ cursor: "pointer" }}
-            onMouseEnter={() => handleMouseEnter(index)}
-            onClick={() => handleClick()}
-            role="button"
-            aria-label={`Rate ${index + 0.5} stars`}
-          />
-        ))}
+        {renderStars()}
         <span className="ms-3 fs-5">
           {displayRating !== null ? displayRating.toFixed(1) : "Select"} / 5.0
         </span>
