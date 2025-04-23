@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Recipe, Ingredient, RecipeIngredient } from "../types/Recipe";
 import { fetchFromBackend } from "./fetchFromBackend";
-import { useCSRF } from "./CSRFContext";
+import { useAuth } from "./AuthContext";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
@@ -20,7 +20,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
   const [availableIngredients, setAvailableIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { csrfToken } = useCSRF();
+  const { csrfToken } = useAuth();
 
   const editor = useEditor({
     extensions: [StarterKit],

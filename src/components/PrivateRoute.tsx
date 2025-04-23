@@ -1,38 +1,32 @@
 // PrivateRoute.js
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { fetchFromBackend } from "./fetchFromBackend";
+// import { fetchFromBackend } from "./fetchFromBackend"; // No longer needed here
+import { useAuth } from "./AuthContext"; // Import useAuth
 
 export function PrivateRoute() {
-  const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
+  const { isLoading, authenticated } = useAuth(); // Use context state
   const location = useLocation();
   const navigate = useNavigate();
 
   const nextUrl = location.pathname + location.search;
   const loginUrl = "/login?next=" + encodeURIComponent(nextUrl);
-  useEffect(() => {
-    // Check authentication status using the session cookie.
-    fetchFromBackend("/api/auth/status/", { credentials: "include" })
-      .then((response) => response.json())
-      .then((data) => {
-        setAuthenticated(data.authenticated);
-      })
-      .catch(() => setAuthenticated(false))
-      .finally(() => setLoading(false));
-  }, []);
 
   useEffect(() => {
-    // Once loading is complete, if not authenticated, redirect using React Router.
-    if (!loading && !authenticated) {
+    // No need to fetch here, context handles it.
+    // Redirect logic remains the same, but relies on context state.
+    if (!isLoading && !authenticated) {
       navigate(loginUrl, { replace: true });
     }
-  }, [loading, authenticated, loginUrl, navigate]);
+  }, [isLoading, authenticated, loginUrl, navigate]);
 
-  if (loading) {
+  if (isLoading) {
+    // Use the loading state from context
     return <div>Loading...</div>;
   }
 
-  // If authenticated, render the protected route's content.
+  // If authenticated (checked by context), render the protected route's content.
+  // Otherwise, the useEffect above will handle the redirect.
   return authenticated ? <Outlet /> : null;
+  // Return null while redirecting or if loading finished and still not authenticated
 }

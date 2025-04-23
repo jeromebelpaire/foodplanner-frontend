@@ -5,7 +5,6 @@ import { Recipe } from "../types/Recipe";
 import { User } from "../types/User";
 import { fetchFromBackend } from "./fetchFromBackend";
 import StarRating from "./StarRating";
-import { useCSRF } from "./CSRFContext";
 import RecipeRatingInput from "./RecipeRatingInput";
 
 // Define type for backend rating object
@@ -19,7 +18,6 @@ interface BackendRecipeRating {
 // Add export
 export const RecipeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { csrfToken } = useCSRF();
   const navigate = useNavigate();
   const location = useLocation();
   const fromPage = location.state?.from || "home";
@@ -314,9 +312,7 @@ export const RecipeDetail: React.FC = () => {
               recipeId={parseInt(id!)}
               initialRating={userRating?.rating ?? null}
               ratingId={userRating?.id ?? null}
-              csrfToken={csrfToken}
               onRatingSubmitted={handleRatingSubmitted}
-              userId={currentUser?.id}
             />
           )}
           {userRatingLoading && (

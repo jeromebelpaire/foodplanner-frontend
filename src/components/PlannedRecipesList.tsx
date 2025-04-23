@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
-import { useCSRF } from "./CSRFContext";
+import { useAuth } from "./AuthContext";
 
 interface Recipe {
   title: string;
@@ -29,7 +29,7 @@ interface PlannedRecipesListProps {
 }
 
 function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: PlannedRecipesListProps) {
-  const { csrfToken } = useCSRF();
+  const { csrfToken } = useAuth();
   const [plannedRecipes, setplannedRecipes] = useState<PlannedRecipe[]>([]);
   const { grocerylistid } = useParams();
 

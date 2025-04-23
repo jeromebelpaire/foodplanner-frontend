@@ -4,12 +4,12 @@ import { Recipe } from "../types/Recipe";
 import { User } from "../types/User";
 import { Link } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
-import { useCSRF } from "./CSRFContext";
+import { useAuth } from "./AuthContext";
 import StarRating from "./StarRating"; // Import StarRating component
 
 // Add export
 export const RecipeList: React.FC = () => {
-  const { csrfToken } = useCSRF();
+  const { csrfToken } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,7 +63,7 @@ export const RecipeList: React.FC = () => {
           method: "DELETE",
           credentials: "include",
           headers: {
-            "X-CSRFToken": csrfToken,
+            "X-CSRFToken": csrfToken!,
           },
         });
 

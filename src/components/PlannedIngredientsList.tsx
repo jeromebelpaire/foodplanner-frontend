@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
-import { useCSRF } from "./CSRFContext";
+import { useAuth } from "./AuthContext";
 
 interface recipeUpdateFlagProps {
   recipeUpdateFlag: boolean;
 }
 
 function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
-  const { csrfToken } = useCSRF();
+  const { csrfToken } = useAuth();
 
   interface Ingredient {
     name: string;
@@ -56,7 +56,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken,
+          "X-CSRFToken": csrfToken!,
         },
         body: JSON.stringify({
           is_checked: newValue,

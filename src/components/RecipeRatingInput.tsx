@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
+import { useAuth } from "./AuthContext";
 
 interface RecipeRatingInputProps {
   recipeId: number;
   initialRating: number | null; // Backend scale 0-10
   ratingId: number | null;
-  userId: number | undefined; // Needed? Backend gets user from session
-  csrfToken: string | null;
   onRatingSubmitted: () => void; // Callback to refetch recipe details
 }
 
@@ -14,9 +13,9 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
   recipeId,
   initialRating,
   ratingId,
-  csrfToken,
   onRatingSubmitted,
 }) => {
+  const { csrfToken } = useAuth();
   // State for the currently selected/saved rating (0-5 scale for UI)
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   // State for the rating shown on hover (0-5 scale for UI)

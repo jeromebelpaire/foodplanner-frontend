@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Select from "react-select";
 import { fetchFromBackend } from "./fetchFromBackend";
-import { useCSRF } from "./CSRFContext";
+import { useAuth } from "./AuthContext";
 
 interface RecipyListDropdownProps {
   onRecipePlanned: () => void;
@@ -23,7 +23,7 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
     label?: string;
   }
 
-  const { csrfToken } = useCSRF();
+  const { csrfToken } = useAuth();
   const formatted_type = type == "recipe" ? "Recipe" : "Extra";
 
   const [recipes, setrecipes] = useState<Recipe[]>([]);

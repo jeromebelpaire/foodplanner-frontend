@@ -1,11 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
-import { useCSRF } from "./CSRFContext";
+import { useAuth } from "./AuthContext";
 import Select from "react-select";
 
 function GroceryListDropdown() {
-  const { csrfToken } = useCSRF();
+  const { csrfToken } = useAuth();
   interface GroceryList {
     name: string;
     id: number;
