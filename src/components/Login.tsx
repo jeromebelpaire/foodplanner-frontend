@@ -60,6 +60,7 @@ function Login() {
     })
       .then((response) => {
         if (response.ok) {
+          fetchCsrfToken();
           return response.json();
         }
         return response.json().then((data) => {
@@ -93,7 +94,7 @@ function Login() {
       })
       .catch((err) => {
         setError(err.message || "An unexpected error occurred during login.");
-        fetchCsrfToken(); // Fetch a new token in case session/token was invalidated
+        fetchCsrfToken();
       });
   };
 
