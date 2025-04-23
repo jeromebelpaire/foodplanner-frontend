@@ -176,7 +176,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         body: formData,
         credentials: "include",
         headers: {
-          "X-CSRFToken": csrfToken,
+          "X-CSRFToken": csrfToken!,
           Accept: "application/json",
         },
       });
