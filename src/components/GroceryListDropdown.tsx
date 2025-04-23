@@ -58,7 +58,7 @@ function GroceryListDropdown() {
     }
     await fetchFromBackend(deleteUrl, {
       method: "DELETE",
-      headers: { "X-CSRFToken": csrfToken },
+      headers: { "X-CSRFToken": csrfToken! },
       body: JSON.stringify({ grocerylists: selectedList.value }),
     });
     navigate(`/grocery-lists`);
@@ -73,7 +73,7 @@ function GroceryListDropdown() {
   async function handleCreation(formData: FormData) {
     const res = await fetchFromBackend("/api/groceries/lists/", {
       method: "POST",
-      headers: { "X-CSRFToken": csrfToken },
+      headers: { "X-CSRFToken": csrfToken! },
       body: formData,
     });
     // TODO review

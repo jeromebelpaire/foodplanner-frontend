@@ -54,7 +54,7 @@ function PlannedRecipesList({ onRecipePlanned, recipeUpdateFlag, type }: Planned
   async function deletePlannedRecipe(deleteUrl: string) {
     await fetchFromBackend(`/${deleteUrl}`, {
       method: "DELETE",
-      headers: { "X-CSRFToken": csrfToken },
+      headers: { "X-CSRFToken": csrfToken! },
     });
     fetchPlannedRecipes(type, grocerylistid!);
     onRecipePlanned();

@@ -51,7 +51,7 @@ function RecipyListDropdown({ onRecipePlanned, type }: RecipyListDropdownProps) 
       try {
         const response = await fetchFromBackend(`/api/groceries/planned-${type}s/`, {
           method: "POST",
-          headers: { "X-CSRFToken": csrfToken },
+          headers: { "X-CSRFToken": csrfToken! },
           body: formData,
         });
         if (response.ok) {
