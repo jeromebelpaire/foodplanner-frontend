@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Recipe } from "../types/Recipe";
 import { User } from "../types/User";
 import { fetchFromBackend } from "./fetchFromBackend";
+import StarRating from "./StarRating";
 
 // Add export
 export const RecipeDetail: React.FC = () => {
@@ -184,6 +185,7 @@ export const RecipeDetail: React.FC = () => {
       <div className="card shadow mb-4">
         <div className="card-body">
           <h1 className="display-5 fw-bold mb-2 text-break">{recipe.title}</h1>
+          <StarRating rating={recipe.average_rating ?? 0} count={recipe.rating_count ?? 0} />
           <div className="text-muted small mb-4">
             <span>By {recipe.author_username || "Unknown Author"}</span>
             <span className="mx-1">&bull;</span>

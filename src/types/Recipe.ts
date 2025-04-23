@@ -22,5 +22,7 @@ export interface Recipe {
   created_on?: string;
   updated_on?: string;
   image?: File | string | null;
+  average_rating?: number;
+  rating_count?: number;
   recipe_ingredients?: RecipeIngredient[];
 }

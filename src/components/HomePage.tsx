@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { Link } from "react-router-dom";
-
-interface Recipe {
-  title?: string;
-  id?: number;
-  slug?: string;
-  image?: string;
-}
+import { Recipe } from "../types/Recipe";
+import StarRating from "./StarRating";
 
 function HomePage() {
   const [recipes, setrecipes] = useState<Recipe[]>([]);
@@ -33,6 +28,10 @@ function HomePage() {
                 <img src={`${recipe.image}`} alt="Picture unavailable" className="card-img-top" />
                 <div className="card-body">
                   <h5 className="card-title">{recipe.title}</h5>
+                  <StarRating
+                    rating={recipe.average_rating ?? 0}
+                    count={recipe.rating_count ?? 0}
+                  />
                 </div>
                 <div className="card-footer">
                   <Link

@@ -5,6 +5,7 @@ import { User } from "../types/User";
 import { Link } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useCSRF } from "./CSRFContext";
+import StarRating from "./StarRating"; // Import StarRating component
 
 // Add export
 export const RecipeList: React.FC = () => {
@@ -134,6 +135,10 @@ export const RecipeList: React.FC = () => {
                     <h5 className="card-title text-truncate" title={recipe.title}>
                       {recipe.title}
                     </h5>
+                    <StarRating
+                      rating={recipe.average_rating ?? 0}
+                      count={recipe.rating_count ?? 0}
+                    />
                   </div>
                 </Link>
                 <div className="card-body pt-0 d-flex flex-column">
