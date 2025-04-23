@@ -1,14 +1,25 @@
 // src/components/RecipeDetail.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Recipe } from "../types/Recipe";
 import { User } from "../types/User";
 import { fetchFromBackend } from "./fetchFromBackend";
 import StarRating from "./StarRating";
+import { useCSRF } from "./CSRFContext";
+import RecipeRatingInput from "./RecipeRatingInput";
+
+// Define type for backend rating object
+interface BackendRecipeRating {
+  id: number;
+  rating: number; // 0-10 scale
+  author_username: string;
+  // Add other fields if needed
+}
 
 // Add export
 export const RecipeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { csrfToken } = useCSRF();
   const navigate = useNavigate();
   const location = useLocation();
   const fromPage = location.state?.from || "home";
@@ -19,6 +30,35 @@ export const RecipeDetail: React.FC = () => {
   const [guestCount, setGuestCount] = useState(1);
   const [scaledIngredients, setScaledIngredients] = useState<string[]>([]);
   const [loadingIngredients, setLoadingIngredients] = useState(false);
+  const [userRating, setUserRating] = useState<BackendRecipeRating | null>(null);
+  const [userRatingLoading, setUserRatingLoading] = useState(true);
+
+  const fetchRecipeData = useCallback(async () => {
+    if (!id) return;
+    try {
+      const [recipeResponse, ingredientsResponse] = await Promise.all([
+        fetchFromBackend(`/api/recipes/recipes/${id}/`),
+        fetchFromBackend(`/api/recipes/recipes/${id}/formatted_ingredients/?guests=${guestCount}`),
+      ]);
+
+      if (!recipeResponse.ok) throw new Error(`Recipe fetch failed: ${recipeResponse.statusText}`);
+      if (!ingredientsResponse.ok)
+        throw new Error(`Ingredients fetch failed: ${ingredientsResponse.statusText}`);
+
+      const recipeData = await recipeResponse.json();
+      const ingredientsData = await ingredientsResponse.json();
+
+      setRecipe(recipeData);
+      setScaledIngredients(ingredientsData.ingredients);
+    } catch (err) {
+      console.error(err);
+      setError(
+        `Failed to reload recipe details. ${
+          err instanceof Error ? err.message : "Please try again later."
+        }`
+      );
+    }
+  }, [id, guestCount]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,30 +69,35 @@ export const RecipeDetail: React.FC = () => {
       }
       try {
         setLoading(true);
+        setUserRatingLoading(true);
         setError("");
 
-        // Use Promise.all for concurrent fetching
-        const [userResponse, recipeResponse, ingredientsResponse] = await Promise.all([
-          fetchFromBackend("/api/auth/status/"),
-          fetchFromBackend(`/api/recipes/recipes/${id}/`),
-          fetchFromBackend(`/api/recipes/recipes/${id}/formatted_ingredients/?guests=1`),
-        ]);
-
-        // Check responses
+        const userResponse = await fetchFromBackend("/api/auth/status/");
         if (!userResponse.ok) throw new Error(`User fetch failed: ${userResponse.statusText}`);
-        if (!recipeResponse.ok)
-          throw new Error(`Recipe fetch failed: ${recipeResponse.statusText}`);
-        if (!ingredientsResponse.ok)
-          throw new Error(`Ingredients fetch failed: ${ingredientsResponse.statusText}`);
-
-        // Parse JSON
         const userData = await userResponse.json();
-        const recipeData = await recipeResponse.json();
-        const ingredientsData = await ingredientsResponse.json();
+        const fetchedUser = userData.user;
+        setCurrentUser(fetchedUser);
 
-        setCurrentUser(userData.user);
-        setRecipe(recipeData);
-        setScaledIngredients(ingredientsData.ingredients);
+        await fetchRecipeData();
+
+        if (fetchedUser) {
+          try {
+            const ratingsResponse = await fetchFromBackend(`/api/recipes/ratings/?recipe=${id}`);
+            if (ratingsResponse.ok) {
+              const allRatings: BackendRecipeRating[] = await ratingsResponse.json();
+              const foundRating = allRatings.find(
+                (r) => r.author_username === fetchedUser.username
+              );
+              setUserRating(foundRating || null);
+            } else {
+              console.error("Failed to fetch ratings:", ratingsResponse.statusText);
+              setUserRating(null);
+            }
+          } catch (ratingErr) {
+            console.error("Error fetching ratings:", ratingErr);
+            setUserRating(null);
+          }
+        }
       } catch (err) {
         console.error(err);
         setError(
@@ -62,17 +107,18 @@ export const RecipeDetail: React.FC = () => {
         );
       } finally {
         setLoading(false);
+        setUserRatingLoading(false);
       }
     };
 
     fetchData();
-  }, [id]);
+  }, [id, fetchRecipeData]);
 
   const handleDeleteRecipe = async () => {
     if (!id) return;
     if (window.confirm("Are you sure you want to delete this recipe?")) {
       try {
-        setError(""); // Clear previous errors
+        setError("");
         const response = await fetchFromBackend(`/api/recipes/recipes/${id}/`, {
           method: "DELETE",
         });
@@ -81,8 +127,7 @@ export const RecipeDetail: React.FC = () => {
           throw new Error(`Delete failed: ${response.statusText}`);
         }
 
-        // No need to parse response for DELETE usually (204 No Content)
-        navigate("/recipes"); // Navigate after successful delete
+        navigate("/recipes");
       } catch (err) {
         console.error(err);
         setError(
@@ -92,8 +137,12 @@ export const RecipeDetail: React.FC = () => {
     }
   };
 
+  const handleRatingSubmitted = useCallback(() => {
+    fetchRecipeData();
+  }, [fetchRecipeData]);
+
   const updateGuestCount = async (count: number) => {
-    if (!id || count < 1) return; // Basic validation
+    if (!id || count < 1) return;
     setGuestCount(count);
     setLoadingIngredients(true);
     try {
@@ -107,21 +156,17 @@ export const RecipeDetail: React.FC = () => {
       setScaledIngredients(data.ingredients);
     } catch (err) {
       console.error(err);
-      // Optionally set an error state specific to ingredients
     } finally {
       setLoadingIngredients(false);
     }
   };
 
-  // Check if user can edit this recipe
   const canEditRecipe = () => {
     if (!currentUser || !recipe) return false;
     return currentUser.is_superuser || recipe.author_username === currentUser.username;
   };
 
-  // Loading and Error States
   if (loading) return <div className="text-center p-3">Loading recipe...</div>;
-  // Display specific error, fallback to generic message
   if (error)
     return (
       <div className="container py-4">
@@ -130,7 +175,6 @@ export const RecipeDetail: React.FC = () => {
     );
   if (!recipe) return <div className="text-center p-3">Recipe not found</div>;
 
-  // Format dates nicely
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString(undefined, {
@@ -142,7 +186,6 @@ export const RecipeDetail: React.FC = () => {
 
   return (
     <div className="container py-4">
-      {/* Back link and Edit/Delete buttons */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <Link
           to={fromPage === "recipes" ? "/recipes" : "/"}
@@ -181,7 +224,6 @@ export const RecipeDetail: React.FC = () => {
         )}
       </div>
 
-      {/* Recipe Content */}
       <div className="card shadow mb-4">
         <div className="card-body">
           <h1 className="display-5 fw-bold mb-2 text-break">{recipe.title}</h1>
@@ -203,12 +245,11 @@ export const RecipeDetail: React.FC = () => {
               style={{ maxHeight: "400px", objectFit: "cover", width: "100%" }}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = "/placeholder-image.svg";
-              }} // Handle image load errors
+              }}
             />
           )}
 
           <div className="row">
-            {/* Instructions */}
             <div className="col-md-8 mb-3 mb-md-0">
               <h2 className="h4 fw-semibold mb-3">Instructions</h2>
               <div className="text-secondary">
@@ -223,7 +264,6 @@ export const RecipeDetail: React.FC = () => {
               </div>
             </div>
 
-            {/* Ingredients */}
             <div className="col-md-4">
               <div className="card bg-light sticky-top" style={{ top: "1rem" }}>
                 <div className="card-body">
@@ -242,7 +282,7 @@ export const RecipeDetail: React.FC = () => {
                         className="form-control form-control-sm"
                         style={{ width: "4rem" }}
                         aria-label="Number of guests"
-                        disabled={loadingIngredients} // Disable while loading new count
+                        disabled={loadingIngredients}
                       />
                     </div>
                   </div>
@@ -268,6 +308,20 @@ export const RecipeDetail: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {currentUser && !userRatingLoading && (
+            <RecipeRatingInput
+              recipeId={parseInt(id!)}
+              initialRating={userRating?.rating ?? null}
+              ratingId={userRating?.id ?? null}
+              csrfToken={csrfToken}
+              onRatingSubmitted={handleRatingSubmitted}
+              userId={currentUser?.id}
+            />
+          )}
+          {userRatingLoading && (
+            <div className="text-center text-muted small mt-3">Loading your rating...</div>
+          )}
         </div>
       </div>
     </div>
