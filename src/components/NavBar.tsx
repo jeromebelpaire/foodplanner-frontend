@@ -62,11 +62,6 @@ function NavBar() {
                     </Link>
                   </li>
                   <li className="nav-item">
-                    <Link className="nav-link" to="/recipes/new">
-                      New Recipe
-                    </Link>
-                  </li>
-                  <li className="nav-item">
                     <Link className="nav-link" to="/feed">
                       Feed
                     </Link>
