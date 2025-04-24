@@ -42,21 +42,42 @@ const Feed: React.FC = () => {
       minute: "2-digit",
     });
     const recipeLink = `/recipe/${event.recipe.id}/${event.recipe.slug}`;
+    const recipeImage = event.recipe.image;
+
+    const ImageThumbnail = () =>
+      // TODO handle css in separate file
+      recipeImage ? (
+        <img
+          src={recipeImage as string}
+          alt={event.recipe.title}
+          className="img-thumbnail mt-2"
+          style={{
+            width: "auto",
+            maxWidth: "100%",
+            maxHeight: "150px",
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+      ) : null;
 
     switch (event.event_type) {
       case "new_recipe": {
         return (
           <>
-            <h5 className="card-title fw-semibold">New Recipe</h5>
-            <h6 className="card-subtitle mb-2 text-muted small">{formattedDate}</h6>
-            <p className="card-text mb-0">
-              <strong className="text-primary">{event.user_username}</strong> published a new
-              recipe:
-              <br />
-              <Link to={recipeLink} className="link-dark fw-medium">
-                {event.recipe.title}
-              </Link>
-            </p>
+            <div>
+              <h5 className="card-title fw-semibold mb-1">New Recipe</h5>
+              <h6 className="card-subtitle mb-2 text-muted small">{formattedDate}</h6>
+              <p className="card-text mb-0">
+                <strong className="text-primary">{event.user_username}</strong> published a new
+                recipe:
+                <br />
+                <Link to={recipeLink} className="link-dark fw-medium">
+                  {event.recipe.title}
+                </Link>
+              </p>
+            </div>
+            <ImageThumbnail />
           </>
         );
       }
@@ -65,21 +86,24 @@ const Feed: React.FC = () => {
         const displayRating = event.rating.rating / 2;
         return (
           <>
-            <h5 className="card-title fw-semibold">New Rating</h5>
-            <h6 className="card-subtitle mb-2 text-muted small">{formattedDate}</h6>
-            <p className="card-text mb-1">
-              <strong className="text-primary">{event.rating.author_username}</strong> rated
-              <br />
-              <Link to={recipeLink} className="link-dark fw-medium">
-                {event.recipe.title}
-              </Link>{" "}
-              <span className="badge bg-warning text-dark">{displayRating.toFixed(1)} ★</span>
-            </p>
-            {event.rating.comment && (
-              <blockquote className="blockquote mt-1 mb-0 border-start border-2 ps-2">
-                <p className="mb-0 fs-6 fst-italic text-muted">"{event.rating.comment}"</p>
-              </blockquote>
-            )}
+            <div>
+              <h5 className="card-title fw-semibold mb-1">New Rating</h5>
+              <h6 className="card-subtitle mb-2 text-muted small">{formattedDate}</h6>
+              <p className="card-text mb-1">
+                <strong className="text-primary">{event.rating.author_username}</strong> rated
+                <br />
+                <Link to={recipeLink} className="link-dark fw-medium">
+                  {event.recipe.title}
+                </Link>{" "}
+                <span className="badge bg-warning text-dark">{displayRating.toFixed(1)} ★</span>
+              </p>
+              {event.rating.comment && (
+                <blockquote className="blockquote mt-1 mb-0 border-start border-2 ps-2">
+                  <p className="mb-0 fs-6 fst-italic text-muted">"{event.rating.comment}"</p>
+                </blockquote>
+              )}
+            </div>
+            <ImageThumbnail />
           </>
         );
       }
@@ -126,20 +150,14 @@ const Feed: React.FC = () => {
           )}
 
           {!loading && !error && feedEvents.length > 0 && (
-            <div className="list-group shadow-sm">
+            <div className="list-group">
               {feedEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="list-group-item list-group-item-action d-flex gap-3 py-3"
+                  className="py-3 px-3 mb-3 border rounded shadow-sm bg-white"
                   aria-current="true"
                 >
-                  {/* Placeholder for potential icons based on event type */}
-                  {/* <i className="bi bi-.... fs-4 text-muted"></i> */}
-                  <div className="d-flex gap-2 w-100 justify-content-between">
-                    <div>{renderEventContent(event)}</div>
-                    {/* Optional: Add a small timestamp or action button here */}
-                    {/* <small className="opacity-50 text-nowrap">now</small> */}
-                  </div>
+                  <div>{renderEventContent(event)}</div>
                 </div>
               ))}
             </div>
