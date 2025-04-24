@@ -1,9 +1,7 @@
-// Login.js
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
-// import { useAuth } from "./AuthContext"; // Remove old import
-import { useAuth } from "./AuthContext"; // Import useAuth
+import { useAuth } from "./AuthContext";
 
 function Login() {
   const { csrfToken, checkAuthStatus, fetchCsrfToken, authenticated } = useAuth(); // Use new hook

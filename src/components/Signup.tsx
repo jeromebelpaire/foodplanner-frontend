@@ -14,14 +14,12 @@ function Signup() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Redirect if already logged in
   useEffect(() => {
     if (authenticated) {
-      navigate("/"); // Redirect to home if already authenticated
+      navigate("/");
     }
   }, [authenticated, navigate]);
 
-  // Ensure CSRF token is available
   useEffect(() => {
     if (!csrfToken) {
       fetchCsrfToken();
@@ -39,7 +37,7 @@ function Signup() {
 
     if (!csrfToken) {
       setError("Cannot submit form. Please try again in a moment.");
-      fetchCsrfToken(); // Attempt to fetch it again
+      fetchCsrfToken();
       return;
     }
 
@@ -62,9 +60,7 @@ function Signup() {
         if (response.ok) {
           return response.json();
         }
-        // Attempt to parse error detail from backend
         return response.json().then((data) => {
-          // Handle potential nested errors or different structures
           let errorMessage = "Signup failed. Please try again.";
           if (data.detail) {
             errorMessage = data.detail;
@@ -77,7 +73,6 @@ function Signup() {
                 .replace(/_/g, " ")
                 .replace(/\b\w/g, (l) => l.toUpperCase())}: ${data[firstErrorKey][0]}`;
             } else {
-              // Fallback for non-field errors or unexpected format
               errorMessage = JSON.stringify(data);
             }
           } // Added check for null
@@ -85,7 +80,6 @@ function Signup() {
         });
       })
       .then(() => {
-        // On successful signup, navigate to login page
         navigate("/login?signupSuccess=true");
       })
       .catch((err) => {
