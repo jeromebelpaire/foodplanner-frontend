@@ -12,6 +12,7 @@ import { RecipeDetail } from "./components/RecipeDetail";
 import { NewRecipe } from "./components/NewRecipe";
 import { EditRecipe } from "./components/EditRecipe";
 import Signup from "./components/Signup";
+import Feed from "./components/Feed";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Route path="/recipes/new" element={<NewRecipe />} />
               <Route path="/recipes/:id" element={<RecipeDetail />} />
               <Route path="/recipes/:id/edit" element={<EditRecipe />} />
+              <Route path="/feed" element={<Feed />} />
             </Route>
           </Routes>
         </AuthProvider>

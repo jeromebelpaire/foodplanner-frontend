@@ -66,6 +66,11 @@ function NavBar() {
                       New Recipe
                     </Link>
                   </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/feed">
+                      Feed
+                    </Link>
+                  </li>
                 </>
               )}
             </ul>
