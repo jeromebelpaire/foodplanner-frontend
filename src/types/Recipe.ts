@@ -5,16 +5,15 @@ export interface Ingredient {
 }
 
 export interface RecipeIngredient {
-  id?: number;
+  id: number;
   ingredient_id: number;
   ingredient?: Ingredient;
-  name?: string;
   quantity: number;
-  unit?: string;
+  unit?: Unit;
 }
 
 export interface Recipe {
-  id?: number;
+  id: number;
   title: string;
   slug?: string;
   author_username?: string;
@@ -25,4 +24,9 @@ export interface Recipe {
   average_rating?: number;
   rating_count?: number;
   recipe_ingredients?: RecipeIngredient[];
+}
+
+export interface Unit {
+  id: number;
+  name: string;
 }

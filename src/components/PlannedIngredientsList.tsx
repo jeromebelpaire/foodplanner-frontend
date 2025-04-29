@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
+import { GroceryListItem } from "../types/Groceries";
 
 interface recipeUpdateFlagProps {
   recipeUpdateFlag: boolean;
@@ -10,21 +11,8 @@ interface recipeUpdateFlagProps {
 function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
   const { csrfToken } = useAuth();
 
-  interface Ingredient {
-    name: string;
-    unit: string;
-  }
-
-  interface IngredientInfo {
-    id: string;
-    quantity: number;
-    ingredient: Ingredient;
-    from_recipes: string;
-    is_checked: boolean;
-  }
-
   const { grocerylistid } = useParams();
-  const [plannedIngredients, setplannedIngredients] = useState<IngredientInfo[]>([]);
+  const [plannedIngredients, setplannedIngredients] = useState<GroceryListItem[]>([]);
   const [isUpdating, setIsUpdating] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
@@ -37,7 +25,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
     setplannedIngredients(data);
   }
 
-  const handleCheckboxChange = async (itemId: string) => {
+  const handleCheckboxChange = async (itemId: number) => {
     const currentItem = plannedIngredients.find((item) => item.id === itemId);
     if (!currentItem) return;
 
@@ -94,7 +82,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
               onChange={() => handleCheckboxChange(ingredientInfo.id)}
               disabled={isUpdating[ingredientInfo.id]}
             />
-            {` ${ingredientInfo.quantity} ${ingredientInfo.ingredient.unit} ${ingredientInfo.ingredient.name} `}
+            {` ${ingredientInfo.quantity} ${ingredientInfo.unit.name} ${ingredientInfo.ingredient.name} `}
             <span className="small-text">{`for ${ingredientInfo.from_recipes}`}</span>
           </li>
         ))}

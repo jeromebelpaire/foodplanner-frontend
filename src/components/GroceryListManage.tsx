@@ -14,13 +14,13 @@ function GroceryListManage() {
     <div className="container py-5">
       <GroceryListDropdown />
       <PlannedIngredientsList recipeUpdateFlag={recipeUpdateFlag} />
-      <RecipyListDropdown onRecipePlanned={handleRecipePlanned} type={"recipe"} />
+      <RecipyListDropdown onPlanned={handleRecipePlanned} type={"recipe"} />
       <PlannedRecipesList
         onRecipePlanned={handleRecipePlanned}
         recipeUpdateFlag={recipeUpdateFlag}
         type={"recipe"}
       />
-      <RecipyListDropdown onRecipePlanned={handleRecipePlanned} type={"extra"} />
+      <RecipyListDropdown onPlanned={handleRecipePlanned} type={"extra"} />
       <PlannedRecipesList
         onRecipePlanned={handleRecipePlanned}
         recipeUpdateFlag={recipeUpdateFlag}
