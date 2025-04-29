@@ -4,7 +4,7 @@ import { RecipeRating } from "./RecipeRating";
 export interface FeedEvent {
   id: number;
   user_username: string;
-  event_type: "new_recipe" | "new_rating";
+  event_type: "new_recipe" | "update_recipe" | "new_rating" | "update_rating";
   created_on: string;
   recipe: Pick<
     Recipe,

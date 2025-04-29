@@ -81,6 +81,24 @@ const Feed: React.FC = () => {
           </>
         );
       }
+      case "update_recipe": {
+        return (
+          <>
+            <div>
+              <h5 className="card-title fw-semibold mb-1">Updated Recipe</h5>
+              <h6 className="card-subtitle mb-2 text-muted small">{formattedDate}</h6>
+              <p className="card-text mb-0">
+                <strong className="text-primary">{event.user_username}</strong> updated a recipe:
+                <br />
+                <Link to={recipeLink} className="link-dark fw-medium">
+                  {event.recipe.title}
+                </Link>
+              </p>
+            </div>
+            <ImageThumbnail />
+          </>
+        );
+      }
       case "new_rating": {
         if (!event.rating) return null;
         const displayRating = event.rating.rating / 2;
@@ -91,6 +109,33 @@ const Feed: React.FC = () => {
               <h6 className="card-subtitle mb-2 text-muted small">{formattedDate}</h6>
               <p className="card-text mb-1">
                 <strong className="text-primary">{event.rating.author_username}</strong> rated
+                <br />
+                <Link to={recipeLink} className="link-dark fw-medium">
+                  {event.recipe.title}
+                </Link>{" "}
+                <span className="badge bg-warning text-dark">{displayRating.toFixed(1)} ★</span>
+              </p>
+              {event.rating.comment && (
+                <blockquote className="blockquote mt-1 mb-0 border-start border-2 ps-2">
+                  <p className="mb-0 fs-6 fst-italic text-muted">"{event.rating.comment}"</p>
+                </blockquote>
+              )}
+            </div>
+            <ImageThumbnail />
+          </>
+        );
+      }
+      case "update_rating": {
+        if (!event.rating) return null;
+        const displayRating = event.rating.rating / 2;
+        return (
+          <>
+            <div>
+              <h5 className="card-title fw-semibold mb-1">Updated Rating</h5>
+              <h6 className="card-subtitle mb-2 text-muted small">{formattedDate}</h6>
+              <p className="card-text mb-1">
+                <strong className="text-primary">{event.rating.author_username}</strong> updated
+                rating for
                 <br />
                 <Link to={recipeLink} className="link-dark fw-medium">
                   {event.recipe.title}
