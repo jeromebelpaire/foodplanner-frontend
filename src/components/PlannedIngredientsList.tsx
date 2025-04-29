@@ -4,11 +4,11 @@ import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
 import { GroceryListItem } from "../types/Groceries";
 
-interface recipeUpdateFlagProps {
-  recipeUpdateFlag: boolean;
+interface plannedItemUpdateFlagProps {
+  plannedItemUpdateFlag: boolean;
 }
 
-function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
+function PlannedIngredientsList({ plannedItemUpdateFlag }: plannedItemUpdateFlagProps) {
   const { csrfToken } = useAuth();
 
   const { grocerylistid } = useParams();
@@ -17,7 +17,7 @@ function PlannedIngredientsList({ recipeUpdateFlag }: recipeUpdateFlagProps) {
 
   useEffect(() => {
     fetchPlannedIngredients(grocerylistid!);
-  }, [grocerylistid, recipeUpdateFlag]);
+  }, [grocerylistid, plannedItemUpdateFlag]);
 
   async function fetchPlannedIngredients(grocerylistid: string) {
     const res = await fetchFromBackend(`/api/groceries/items/?grocery_list=${grocerylistid}`);

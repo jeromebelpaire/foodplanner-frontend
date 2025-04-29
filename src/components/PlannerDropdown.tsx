@@ -3,11 +3,11 @@ import { useParams } from "react-router-dom";
 import Select from "react-select";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
-import { Recipe, Ingredient } from "../types/Recipe";
+import { Recipe, Ingredient, Unit } from "../types/Recipe";
 
 // Configuration for 'recipe' type
 const recipeConfig = {
-  type: "recipe",
+  type: "recipe" as const,
   apiEndpoint: "/api/recipes/recipes/?limit=1000",
   postEndpoint: "/api/groceries/planned-recipes/",
   selectPlaceholder: "Select a Recipe",
@@ -17,11 +17,12 @@ const recipeConfig = {
   getOptionLabel: (recipe: Recipe) => recipe.title,
   needsDateField: true,
   formattedName: "Recipe",
+  needsUnitField: false,
 };
 
 // Configuration for 'extra' type (Ingredient)
 const extraConfig = {
-  type: "extra",
+  type: "extra" as const,
   apiEndpoint: "/api/ingredients/ingredients/?limit=1000",
   postEndpoint: "/api/groceries/planned-extras/",
   selectPlaceholder: "Select an Extra Ingredient",
@@ -31,6 +32,7 @@ const extraConfig = {
   getOptionLabel: (ingredient: Ingredient) => ingredient.name,
   needsDateField: false,
   formattedName: "Extra",
+  needsUnitField: true,
 };
 
 // Map types to their configurations
@@ -56,6 +58,8 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
   const [selectedItem, setSelectedItem] = useState<{ value: number; label: string } | null>(null);
   const [quantity, setQuantity] = useState("");
   const [planDate, setPlanDate] = useState("");
+  const [selectedUnitId, setSelectedUnitId] = useState<string>("");
+  const [availableUnits, setAvailableUnits] = useState<Unit[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,24 +73,44 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
     }
 
     let isMounted = true;
-    async function fetchItems() {
+    async function fetchItemsAndUnits() {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetchFromBackend(config.apiEndpoint, { credentials: "include" });
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+        // Fetch items (Recipes or Ingredients)
+        const itemsRes = await fetchFromBackend(config.apiEndpoint, { credentials: "include" });
+        if (!itemsRes.ok) {
+          throw new Error(`HTTP error fetching items! status: ${itemsRes.status}`);
         }
-        const data = await res.json();
-        const fetchedItems = Array.isArray(data) ? data : data.results || [];
+        const itemsData = await itemsRes.json();
+        const fetchedItems = Array.isArray(itemsData) ? itemsData : itemsData.results || [];
 
         if (isMounted) {
           setItems(fetchedItems);
         }
+
+        // Fetch units if needed for the current type
+        if (config.needsUnitField) {
+          const unitsRes = await fetchFromBackend("/api/ingredients/units/", {
+            credentials: "include",
+          });
+          if (!unitsRes.ok) {
+            throw new Error(`HTTP error fetching units! status: ${unitsRes.status}`);
+          }
+          const unitsData: Unit[] = await unitsRes.json();
+          if (isMounted) {
+            unitsData.sort((a, b) => a.name.localeCompare(b.name));
+            setAvailableUnits(unitsData);
+          }
+        }
       } catch (err) {
-        console.error(`Failed to fetch ${config.formattedName}s:`, err);
+        console.error(`Failed to fetch data for ${config.formattedName}:`, err);
         if (isMounted) {
-          setError(`Could not load ${config.formattedName}s. Please try again.`);
+          setError(
+            err instanceof Error
+              ? err.message
+              : `Could not load ${config.formattedName}s or Units. Please try again.`
+          );
         }
       } finally {
         if (isMounted) {
@@ -95,7 +119,7 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
       }
     }
 
-    fetchItems();
+    fetchItemsAndUnits();
 
     return () => {
       isMounted = false;
@@ -106,6 +130,7 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
     setSelectedItem(option);
     setQuantity("");
     setPlanDate("");
+    setSelectedUnitId("");
     setError(null);
   };
 
@@ -118,6 +143,10 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
       setError("Please select a date.");
       return;
     }
+    if (config.needsUnitField && !selectedUnitId) {
+      setError("Please select a unit.");
+      return;
+    }
 
     setIsPosting(true);
     setError(null);
@@ -128,6 +157,9 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
     formData.append(config.payloadQuantityKey, quantity);
     if (config.needsDateField) {
       formData.append("planned_on", planDate);
+    }
+    if (config.needsUnitField) {
+      formData.append("unit_id", selectedUnitId);
     }
 
     try {
@@ -143,12 +175,14 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
         setSelectedItem(null);
         setQuantity("");
         setPlanDate("");
+        setSelectedUnitId("");
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error("Failed to save the item:", response.status, errorData);
         const message =
           errorData.detail ||
           errorData.non_field_errors?.[0] ||
+          (errorData.unit_id && `Unit: ${errorData.unit_id[0]}`) ||
           `Failed to plan ${config.formattedName}. Status: ${response.status}`;
         setError(message);
       }
@@ -158,7 +192,16 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
     } finally {
       setIsPosting(false);
     }
-  }, [selectedItem, quantity, planDate, grocerylistid, config, csrfToken, onPlanned]);
+  }, [
+    selectedItem,
+    quantity,
+    planDate,
+    selectedUnitId,
+    grocerylistid,
+    config,
+    csrfToken,
+    onPlanned,
+  ]);
 
   // Generate options for react-select
   const options = items.map((item) => {
@@ -214,12 +257,38 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
               placeholder={config.quantityLabel}
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              min={type === "recipe" ? "1" : "0.01"}
+              min={type === "recipe" ? "1" : "1"}
               step={type === "recipe" ? "1" : "any"}
               required
               aria-label={config.quantityLabel}
             />
           </div>
+
+          {config.needsUnitField && (
+            <div className="flex-grow-1">
+              <label htmlFor={`${type}-unit`} className="form-label small mb-1 visually-hidden">
+                Unit
+              </label>
+              <select
+                id={`${type}-unit`}
+                className="form-select form-select-sm"
+                value={selectedUnitId}
+                onChange={(e) => setSelectedUnitId(e.target.value)}
+                required
+                aria-label="Unit"
+                disabled={availableUnits.length === 0}
+              >
+                <option value="" disabled>
+                  Select Unit...
+                </option>
+                {availableUnits.map((unit) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {config.needsDateField && (
             <div className="flex-grow-1">
@@ -241,7 +310,12 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
           <button
             onClick={handlePost}
             className="btn btn-primary btn-sm"
-            disabled={isPosting || !quantity || (config.needsDateField && !planDate)}
+            disabled={
+              isPosting ||
+              !quantity ||
+              (config.needsDateField && !planDate) ||
+              (config.needsUnitField && !selectedUnitId)
+            }
           >
             {isPosting ? "Planning..." : `Plan ${config.formattedName}`}
           </button>

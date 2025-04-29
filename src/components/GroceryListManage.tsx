@@ -1,29 +1,29 @@
 import { useState } from "react";
 import GroceryListDropdown from "./GroceryListDropdown";
 import PlannedIngredientsList from "./PlannedIngredientsList";
-import RecipyListDropdown from "./RecipeListDropdown";
-import PlannedRecipesList from "./PlannedRecipesList";
+import PlannerDropdown from "./PlannerDropdown";
+import PlannedItemsList from "./PlannedItemsList";
 
 function GroceryListManage() {
-  const [recipeUpdateFlag, setRecipeUpdateFlag] = useState(false);
+  const [plannedItemUpdateFlag, setplannedItemUpdateFlag] = useState(false);
 
   const handleRecipePlanned = () => {
-    setRecipeUpdateFlag((prev) => !prev);
+    setplannedItemUpdateFlag((prev) => !prev);
   };
   return (
     <div className="container py-5">
       <GroceryListDropdown />
-      <PlannedIngredientsList recipeUpdateFlag={recipeUpdateFlag} />
-      <RecipyListDropdown onPlanned={handleRecipePlanned} type={"recipe"} />
-      <PlannedRecipesList
+      <PlannedIngredientsList plannedItemUpdateFlag={plannedItemUpdateFlag} />
+      <PlannerDropdown onPlanned={handleRecipePlanned} type={"recipe"} />
+      <PlannedItemsList
         onRecipePlanned={handleRecipePlanned}
-        recipeUpdateFlag={recipeUpdateFlag}
+        plannedItemUpdateFlag={plannedItemUpdateFlag}
         type={"recipe"}
       />
-      <RecipyListDropdown onPlanned={handleRecipePlanned} type={"extra"} />
-      <PlannedRecipesList
+      <PlannerDropdown onPlanned={handleRecipePlanned} type={"extra"} />
+      <PlannedItemsList
         onRecipePlanned={handleRecipePlanned}
-        recipeUpdateFlag={recipeUpdateFlag}
+        plannedItemUpdateFlag={plannedItemUpdateFlag}
         type={"extra"}
       />
     </div>
