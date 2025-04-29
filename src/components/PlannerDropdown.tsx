@@ -139,10 +139,6 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
       setError(`Please select a ${config.formattedName} and enter a ${config.quantityLabel}.`);
       return;
     }
-    if (config.needsDateField && !planDate) {
-      setError("Please select a date.");
-      return;
-    }
     if (config.needsUnitField && !selectedUnitId) {
       setError("Please select a unit.");
       return;
@@ -155,7 +151,7 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
     formData.append("grocery_list_id", grocerylistid);
     formData.append(config.payloadIdKey, selectedItem.value.toString());
     formData.append(config.payloadQuantityKey, quantity);
-    if (config.needsDateField) {
+    if (planDate) {
       formData.append("planned_on", planDate);
     }
     if (config.needsUnitField) {
@@ -301,7 +297,6 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
                 className="form-control form-control-sm"
                 value={planDate}
                 onChange={(e) => setPlanDate(e.target.value)}
-                required
                 aria-label="Planned Date"
               />
             </div>
@@ -310,12 +305,7 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
           <button
             onClick={handlePost}
             className="btn btn-primary btn-sm"
-            disabled={
-              isPosting ||
-              !quantity ||
-              (config.needsDateField && !planDate) ||
-              (config.needsUnitField && !selectedUnitId)
-            }
+            disabled={isPosting || !quantity || (config.needsUnitField && !selectedUnitId)}
           >
             {isPosting ? "Planning..." : `Plan ${config.formattedName}`}
           </button>
