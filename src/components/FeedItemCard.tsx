@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FeedEvent } from "../types/FeedEvent";
 import { FeedItemComment } from "../types/FeedItemComment";
 import { fetchFromBackend } from "./fetchFromBackend";
+import { useAuth } from "./AuthContext";
 
 // --- Helper Components ---
 
@@ -39,23 +40,136 @@ const FormattedEventDate: React.FC<{ dateString: string }> = ({ dateString }) =>
 };
 
 // Comment Display Component
-const CommentDisplay: React.FC<{ comment: FeedItemComment }> = ({ comment }) => {
+interface CommentDisplayProps {
+  comment: FeedItemComment;
+  currentUserUsername: string | null;
+  onDelete: (commentId: number) => void;
+  onUpdate: (commentId: number, newText: string) => Promise<boolean>;
+}
+
+const CommentDisplay: React.FC<CommentDisplayProps> = ({
+  comment,
+  currentUserUsername,
+  onDelete,
+  onUpdate,
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.text);
+  const [isSubmittingEdit, startEditTransition] = useTransition();
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const isAuthor = currentUserUsername === comment.user_username;
+
   const commentDate = new Date(comment.created_at);
   const formattedDate = commentDate.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  const handleEditClick = () => {
+    setEditText(comment.text);
+    setIsEditing(true);
+    setEditError(null);
+  };
+
+  const handleCancelClick = () => {
+    setIsEditing(false);
+    setEditError(null);
+  };
+
+  const handleSaveClick = () => {
+    if (!editText.trim() || editText === comment.text) {
+      setIsEditing(false);
+      return;
+    }
+    setEditError(null);
+    startEditTransition(async () => {
+      const success = await onUpdate(comment.id, editText);
+      if (success) {
+        setIsEditing(false);
+      } else {
+        setEditError("Failed to save comment.");
+      }
+    });
+  };
+
+  const handleDeleteClick = () => {
+    onDelete(comment.id);
+  };
+
   return (
-    <div className="d-flex mb-2">
-      <div className="flex-shrink-0 small me-2 text-muted">
-        <i className="bi bi-person-circle"></i> {/* Placeholder icon */}
+    <div className="d-flex mb-2 position-relative" data-comment-id={comment.id}>
+      <div className="flex-shrink-0 small pt-1 me-2 text-muted">
+        <i className="bi bi-person-circle"></i>
       </div>
       <div className="flex-grow-1">
         <span className="fw-semibold small me-2">{comment.user_username}</span>
-        <span className="text-muted small">{formattedDate}</span>
-        <p className="mb-0 small">{comment.text}</p>
+        <span className="text-muted small align-middle">{formattedDate}</span>
+
+        {isEditing ? (
+          <div className="mt-1">
+            <textarea
+              className="form-control form-control-sm"
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              rows={2}
+              required
+              aria-label="Edit comment"
+              disabled={isSubmittingEdit}
+            />
+            {editError && <div className="text-danger small mt-1">{editError}</div>}
+            <div className="mt-1 d-flex justify-content-end gap-2">
+              <button
+                className="btn btn-sm btn-secondary py-0 px-1"
+                onClick={handleCancelClick}
+                disabled={isSubmittingEdit}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-sm btn-primary py-0 px-1"
+                onClick={handleSaveClick}
+                disabled={isSubmittingEdit || !editText.trim() || editText === comment.text}
+              >
+                {isSubmittingEdit ? (
+                  <span
+                    className="spinner-border spinner-border-sm"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                ) : (
+                  "Save"
+                )}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="mb-0 small mt-1" style={{ whiteSpace: "pre-wrap" }}>
+            {comment.text}
+          </p>
+        )}
       </div>
-      {/* TODO: Add edit/delete options if needed based on ownership */}
+
+      {isAuthor && !isEditing && (
+        <div className="position-absolute end-0 top-0">
+          <button
+            className="btn btn-sm btn-link text-secondary p-0 me-1"
+            onClick={handleEditClick}
+            aria-label="Edit comment"
+            title="Edit"
+          >
+            <i className="bi bi-pencil-square"></i>
+          </button>
+          <button
+            className="btn btn-sm btn-link text-danger p-0"
+            onClick={handleDeleteClick}
+            aria-label="Delete comment"
+            title="Delete"
+          >
+            <i className="bi bi-trash"></i>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -64,10 +178,12 @@ const CommentDisplay: React.FC<{ comment: FeedItemComment }> = ({ comment }) => 
 
 interface FeedItemCardProps {
   event: FeedEvent;
-  csrfToken: string | null;
 }
 
-const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
+const FeedItemCard: React.FC<FeedItemCardProps> = ({ event }) => {
+  const { user, csrfToken } = useAuth();
+  const currentUserUsername = user?.username;
+
   // State for Likes
   const [isLiked, setIsLiked] = useState(event.is_liked_by_user);
   const [currentLikeCount, setCurrentLikeCount] = useState(event.like_count);
@@ -87,7 +203,6 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
   const [postCommentError, setPostCommentError] = useState<string | null>(null);
 
   // --- Event Content Rendering ---
-  // (Adapted from Feed.tsx renderEventContent)
   const renderEventSpecificContent = () => {
     const recipeLink = `/recipe/${event.recipe.id}/${event.recipe.slug}`;
 
@@ -130,7 +245,7 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
       case "new_rating":
       case "update_rating": {
         if (!event.rating) return null;
-        const displayRating = event.rating.rating / 2; // Assuming rating is out of 10
+        const displayRating = event.rating.rating / 2;
         const isUpdate = event.event_type === "update_rating";
         return (
           <>
@@ -176,7 +291,6 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
     const newLiked = !isLiked;
     const newCount = newLiked ? originalCount + 1 : originalCount - 1;
 
-    // Optimistic update
     setIsLiked(newLiked);
     setCurrentLikeCount(newCount);
 
@@ -190,18 +304,13 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
         });
 
         if (!response.ok && response.status !== 304) {
-          // 304 Not Modified is ok for toggle
-          // Revert optimistic update on failure
           setIsLiked(originalLiked);
           setCurrentLikeCount(originalCount);
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.detail || `Failed to ${newLiked ? "like" : "unlike"}.`);
         }
-        // Optional: Fetch the item again to get the *exact* server count,
-        // but optimistic update is usually sufficient for likes.
       } catch (err) {
         console.error("Like toggle error:", err);
-        // Revert optimistic update
         setIsLiked(originalLiked);
         setCurrentLikeCount(originalCount);
         setLikeError(err instanceof Error ? err.message : "Could not update like status.");
@@ -231,7 +340,6 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
   const toggleComments = useCallback(() => {
     const newShowState = !showComments;
     setShowComments(newShowState);
-    // Fetch comments only when opening and if they haven't been fetched yet
     if (newShowState && comments.length === 0) {
       fetchComments();
     }
@@ -261,9 +369,8 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
           }
 
           const postedComment: FeedItemComment = await response.json();
-          // Add comment to list and clear input
           setComments((prev) => [...prev, postedComment]);
-          setCurrentCommentCount((prev) => prev + 1); // Update comment count
+          setCurrentCommentCount((prev) => prev + 1);
           setNewCommentText("");
         } catch (err) {
           console.error("Error posting comment:", err);
@@ -274,6 +381,74 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
     [event.id, newCommentText, isPostingComment, csrfToken]
   );
 
+  const handleDeleteComment = useCallback(
+    async (commentId: number) => {
+      if (!csrfToken) return;
+      const originalComments = [...comments];
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      setCurrentCommentCount((prev) => Math.max(0, prev - 1));
+
+      const url = `/api/feed/comments/${commentId}/`;
+      try {
+        const response = await fetchFromBackend(url, {
+          method: "DELETE",
+          headers: { "X-CSRFToken": csrfToken },
+        });
+        if (!response.ok && response.status !== 204) {
+          setComments(originalComments);
+          setCurrentCommentCount((prev) => prev + 1);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || "Failed to delete comment.");
+        }
+      } catch (err) {
+        console.error("Delete comment error:", err);
+        setComments(originalComments);
+        setCurrentCommentCount((prev) => prev + 1);
+        setCommentError(err instanceof Error ? err.message : "Could not delete comment.");
+      }
+    },
+    [comments, csrfToken]
+  );
+
+  const handleUpdateComment = useCallback(
+    async (commentId: number, newText: string): Promise<boolean> => {
+      if (!csrfToken) return false;
+
+      const originalComments = [...comments];
+      const commentIndex = originalComments.findIndex((c) => c.id === commentId);
+      if (commentIndex === -1) return false;
+
+      setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, text: newText } : c)));
+
+      const url = `/api/feed/comments/${commentId}/`;
+      try {
+        const response = await fetchFromBackend(url, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken,
+          },
+          body: JSON.stringify({ text: newText }),
+        });
+
+        if (!response.ok) {
+          setComments(originalComments);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || "Failed to update comment.");
+        }
+        const updatedCommentFromServer: FeedItemComment = await response.json();
+        setComments((prev) => prev.map((c) => (c.id === commentId ? updatedCommentFromServer : c)));
+        return true;
+      } catch (err) {
+        console.error("Update comment error:", err);
+        setComments(originalComments);
+        setCommentError(err instanceof Error ? err.message : "Could not update comment.");
+        return false;
+      }
+    },
+    [comments, csrfToken]
+  );
+
   // --- Render ---
   return (
     <div className="py-3 px-3 mb-3 border rounded shadow-sm bg-white">
@@ -282,7 +457,6 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
 
       {/* Like/Comment Action Bar */}
       <div className="mt-2 pt-2 border-top d-flex justify-content-start align-items-center small gap-3">
-        {/* Like Button */}
         <button
           className={`btn btn-sm p-0 border-0 d-flex align-items-center ${
             isLiked ? "text-danger" : "text-secondary"
@@ -296,7 +470,6 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
           <span>{currentLikeCount}</span>
         </button>
 
-        {/* Comment Button */}
         <button
           className="btn btn-sm p-0 border-0 d-flex align-items-center text-secondary"
           onClick={toggleComments}
@@ -323,12 +496,17 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event, csrfToken }) => {
           {!isLoadingComments && !commentError && comments.length > 0 && (
             <div className="mb-3">
               {comments.map((comment) => (
-                <CommentDisplay key={comment.id} comment={comment} />
+                <CommentDisplay
+                  key={comment.id}
+                  comment={comment}
+                  currentUserUsername={currentUserUsername ?? null}
+                  onDelete={handleDeleteComment}
+                  onUpdate={handleUpdateComment}
+                />
               ))}
             </div>
           )}
 
-          {/* Add Comment Form */}
           {csrfToken && (
             <form onSubmit={handlePostComment} className="d-flex gap-2">
               <textarea

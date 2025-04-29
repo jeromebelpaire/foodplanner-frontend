@@ -1,7 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { FeedEvent } from "../types/FeedEvent";
-import { useAuth } from "./AuthContext";
 import FeedItemCard from "./FeedItemCard";
 
 // Lazy load the FollowUsers component
@@ -12,7 +11,6 @@ const Feed: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showFollowModal, setShowFollowModal] = useState<boolean>(false);
-  const { csrfToken } = useAuth();
 
   useEffect(() => {
     const loadFeed = async () => {
@@ -78,7 +76,7 @@ const Feed: React.FC = () => {
           {!loading && !error && feedEvents.length > 0 && (
             <div className="list-group list-group-flush p-0">
               {feedEvents.map((event) => (
-                <FeedItemCard key={event.id} event={event} csrfToken={csrfToken} />
+                <FeedItemCard key={event.id} event={event} />
               ))}
             </div>
           )}
