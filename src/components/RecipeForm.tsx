@@ -14,8 +14,8 @@ interface IngredientOption {
 interface FormIngredientState {
   recipeIngredientId?: number;
   ingredientId: number | null;
-  name?: string;
-  unit: string;
+  ingredientName?: string;
+  unitId: number | null;
   quantity: number;
 }
 
@@ -25,8 +25,10 @@ interface RecipeFormProps {
   onCancel: () => void;
 }
 
-const AVAILABLE_UNITS = ["g", "kg", "ml", "l", "tsp", "tbsp", "piece", "cup"];
-const DEFAULT_UNIT = AVAILABLE_UNITS[0];
+interface ApiUnit {
+  id: number;
+  name: string;
+}
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel }) => {
   const [title, setTitle] = useState("");
@@ -34,6 +36,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [ingredients, setIngredients] = useState<FormIngredientState[]>([]);
+  const [availableUnits, setAvailableUnits] = useState<ApiUnit[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { csrfToken } = useAuth();
@@ -52,27 +55,52 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
   });
 
   useEffect(() => {
+    const fetchUnits = async () => {
+      try {
+        const response = await fetchFromBackend("/api/ingredients/units/", {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: ApiUnit[] = await response.json();
+        data.sort((a, b) => a.name.localeCompare(b.name));
+        setAvailableUnits(data);
+      } catch (err) {
+        console.error("Failed to fetch units:", err);
+        setError("Could not load ingredient units. Please try reloading.");
+      }
+    };
+    fetchUnits();
+  }, []);
+
+  useEffect(() => {
     if (!recipe) return;
     setTitle(recipe.title);
     setContent(recipe.content || "");
     if (recipe.image && typeof recipe.image === "string") {
       setImagePreview(recipe.image);
+    } else {
+      setImagePreview(null);
+      setImage(null);
     }
     if (recipe.recipe_ingredients) {
       setIngredients(
         recipe.recipe_ingredients.map((ri) => ({
           recipeIngredientId: ri.id,
-          ingredientId: ri.ingredient?.id ?? ri.ingredient_id,
+          ingredientId: ri.ingredient?.id ?? null,
+          ingredientName: ri.ingredient?.name,
           quantity: ri.quantity,
-          name: ri.ingredient?.name ?? ri.name,
-          unit: ri.unit || DEFAULT_UNIT,
+          unitId: ri.unit?.id ?? null,
         }))
       );
+    } else {
+      setIngredients([]);
     }
   }, [recipe]);
 
   useEffect(() => {
-    if (editor && recipe?.content) {
+    if (editor && recipe?.content && editor.getHTML() !== recipe.content) {
       editor.commands.setContent(recipe.content);
     }
   }, [editor, recipe?.content]);
@@ -121,10 +149,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
       reader.readAsDataURL(selectedFile);
     } else {
       setImage(null);
-      if (!recipe?.image) {
-        setImagePreview(null);
-      } else if (typeof recipe.image === "string") {
+      if (recipe?.image && typeof recipe.image === "string") {
         setImagePreview(recipe.image);
+      } else {
+        setImagePreview(null);
       }
     }
   };
@@ -135,8 +163,8 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
       {
         ingredientId: null,
         quantity: 1,
-        unit: DEFAULT_UNIT,
-        name: "",
+        unitId: null,
+        ingredientName: "",
       },
     ]);
   };
@@ -156,13 +184,13 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
       updatedIngredients[index] = {
         ...updatedIngredients[index],
         ingredientId: selectedOption.value,
-        name: selectedOption.label,
+        ingredientName: selectedOption.label,
       };
     } else {
       updatedIngredients[index] = {
         ...updatedIngredients[index],
         ingredientId: null,
-        name: "",
+        ingredientName: "",
       };
     }
     setIngredients(updatedIngredients);
@@ -179,9 +207,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
 
   const handleUnitChange = (index: number, value: string) => {
     const updatedIngredients = [...ingredients];
+    const unitId = value ? parseInt(value, 10) : null;
     updatedIngredients[index] = {
       ...updatedIngredients[index],
-      unit: value,
+      unitId: unitId,
     };
     setIngredients(updatedIngredients);
   };
@@ -192,22 +221,19 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
     setError("");
 
     const validIngredients = ingredients.filter(
-      (ing) => ing.ingredientId !== null && ing.ingredientId > 0 && ing.quantity > 0 && ing.unit
+      (ing) => ing.ingredientId !== null && ing.unitId !== null && ing.quantity > 0
     );
 
-    if (validIngredients.length !== ingredients.length) {
-      if (ingredients.length > 0) {
-        setError(
-          "Please select a valid ingredient, quantity > 0, and unit for all items, or remove unused rows."
-        );
-        setLoading(false);
-        return;
-      }
-    }
+    const incompleteIngredients = ingredients.some(
+      (ing) =>
+        (ing.ingredientId !== null || ing.quantity > 0 || ing.unitId !== null) &&
+        (ing.ingredientId === null || ing.unitId === null || !(ing.quantity > 0))
+    );
 
-    const incompleteIngredients = ingredients.some((ing) => ing.ingredientId === null || !ing.unit);
     if (incompleteIngredients) {
-      setError("Please select an ingredient and unit for all added rows or remove unused rows.");
+      setError(
+        "Please select a valid ingredient, quantity > 0, and unit for all items, or remove incomplete rows."
+      );
       setLoading(false);
       return;
     }
@@ -223,16 +249,14 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         formData.append("remove_image", "true");
       }
 
-      const ingredientsPayload = validIngredients.map(({ ingredientId, quantity, unit }) => ({
+      const ingredientsPayload = validIngredients.map(({ ingredientId, quantity, unitId }) => ({
         ingredient_id: ingredientId,
         quantity,
-        unit,
+        unit_id: unitId,
       }));
 
-      if (ingredientsPayload.length > 0) {
+      if (ingredientsPayload.length > 0 || recipe?.id) {
         formData.append("recipe_ingredients", JSON.stringify(ingredientsPayload));
-      } else if (recipe?.id) {
-        formData.append("recipe_ingredients", JSON.stringify([]));
       }
 
       const url = recipe?.id ? `/api/recipes/recipes/${recipe.id}/` : "/api/recipes/recipes/";
@@ -249,18 +273,25 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
-        console.error("Save Error Data:", errorData);
-        const message = errorData.detail || errorData.message || JSON.stringify(errorData);
+        const errorData = await response.json().catch(() => ({ detail: "Unknown save error." }));
+        console.error("Save Error Response:", errorData);
+        const message =
+          errorData.detail ||
+          Object.entries(errorData)
+            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+            .join("; ") ||
+          "Failed to save recipe.";
         throw new Error(`HTTP error! status: ${response.status} - ${message}`);
       }
 
       const savedRecipe: Recipe = await response.json();
       onSave(savedRecipe);
     } catch (err) {
-      console.error(err);
+      console.error("Submit Error:", err);
       setError(
-        `Failed to save recipe. ${err instanceof Error ? err.message : "Please try again."}`
+        `Failed to save recipe. ${
+          err instanceof Error ? err.message : "An unknown error occurred."
+        }`
       );
     } finally {
       setLoading(false);
@@ -358,7 +389,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
             Numbered List
           </button>
         </div>
-        <div className="btn-group me-2" role="group" aria-label="Other">
+        <div className="btn-group" role="group" aria-label="Other">
           <button
             type="button"
             onMouseDown={(event) => {
@@ -376,7 +407,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4">
+    <form onSubmit={handleSubmit} className="mb-4" noValidate>
       <h2 className="h4 fw-bold mb-3">{recipe ? "Edit Recipe" : "Create New Recipe"}</h2>
 
       {error && <div className="alert alert-danger">{error}</div>}
@@ -401,10 +432,11 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         </label>
         <div className="border rounded">
           <MenuBar />
-          <div className="p-2">
+          <div className="editor-wrapper p-2">
             <EditorContent
+              id="content"
               editor={editor}
-              className="form-control p-0 border-0"
+              className="form-control p-0 border-0 tiptap-editor"
               style={{ minHeight: "150px" }}
             />
           </div>
@@ -426,7 +458,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           <div className="mt-2 position-relative d-inline-block">
             <img
               src={imagePreview}
-              alt="Preview"
+              alt="Current recipe image"
               className="img-thumbnail"
               style={{ maxHeight: "160px", objectFit: "cover" }}
             />
@@ -459,19 +491,21 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           <p className="text-muted fst-italic">No ingredients added yet.</p>
         )}
 
-        <div className="mb-3">
+        <div className="vstack gap-2">
           {ingredients.map((ingredient, index) => {
+            const ingredientDisplayName = ingredient.ingredientName || `ingredient ${index + 1}`;
             const currentSelectValue = ingredient.ingredientId
-              ? { value: ingredient.ingredientId, label: ingredient.name || "Loading..." }
+              ? { value: ingredient.ingredientId, label: ingredient.ingredientName || "Loading..." }
               : null;
 
             return (
               <div
                 key={index}
-                className="d-flex align-items-center gap-2 mb-2 p-2 border rounded bg-light"
+                className="d-flex flex-wrap align-items-center gap-2 p-2 border rounded bg-light"
               >
-                <div style={{ flexGrow: 1 }}>
+                <div className="flex-grow-1" style={{ minWidth: "200px" }}>
                   <AsyncSelect<IngredientOption>
+                    inputId={`ingredient-${index}`}
                     cacheOptions
                     defaultOptions
                     loadOptions={loadIngredientOptions}
@@ -481,34 +515,40 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
                     }
                     placeholder="Search ingredient..."
                     isClearable
-                    required
+                    aria-label={`Select ingredient for row ${index + 1}`}
                   />
                 </div>
 
                 <input
+                  id={`quantity-${index}`}
                   type="number"
                   value={ingredient.quantity}
                   onChange={(e) => handleQuantityChange(index, e.target.value)}
                   placeholder="Qty"
                   className="form-control text-end"
-                  style={{ width: "80px" }}
+                  style={{ width: "90px" }}
                   min="0.01"
                   step="any"
                   required
-                  aria-label={`Quantity for ${ingredient.name || `ingredient ${index + 1}`}`}
+                  aria-label={`Quantity for ${ingredientDisplayName}`}
                 />
 
                 <select
-                  value={ingredient.unit}
+                  id={`unit-${index}`}
+                  value={ingredient.unitId ?? ""}
                   onChange={(e) => handleUnitChange(index, e.target.value)}
                   className="form-select"
-                  style={{ width: "90px" }}
+                  style={{ width: "110px" }}
                   required
-                  aria-label={`Unit for ${ingredient.name || `ingredient ${index + 1}`}`}
+                  aria-label={`Unit for ${ingredientDisplayName}`}
+                  disabled={availableUnits.length === 0}
                 >
-                  {AVAILABLE_UNITS.map((unit) => (
-                    <option key={unit} value={unit}>
-                      {unit}
+                  <option value="" disabled>
+                    Unit...
+                  </option>
+                  {availableUnits.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.name}
                     </option>
                   ))}
                 </select>
@@ -518,7 +558,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
                   onClick={() => handleRemoveIngredient(index)}
                   className="btn btn-link text-danger p-1 flex-shrink-0"
                   title="Remove Ingredient"
-                  aria-label={`Remove ${ingredient.name || `ingredient ${index + 1}`}`}
+                  aria-label={`Remove ${ingredientDisplayName}`}
                 >
                   &times;
                 </button>
@@ -543,8 +583,12 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           disabled={
             loading ||
             !title ||
-            !content ||
-            ingredients.some((ing) => ing.ingredientId === null || !ing.unit)
+            !editor?.getHTML() ||
+            ingredients.some(
+              (ing) =>
+                (ing.ingredientId !== null || ing.unitId !== null || ing.quantity > 0) &&
+                (ing.ingredientId === null || ing.unitId === null || !(ing.quantity > 0))
+            )
           }
         >
           {loading ? "Saving..." : recipe ? "Update Recipe" : "Create Recipe"}
