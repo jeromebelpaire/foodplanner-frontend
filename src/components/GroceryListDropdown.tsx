@@ -91,7 +91,7 @@ function GroceryListDropdown() {
   return (
     <>
       <form action={handleCreation}>
-        <input className="form-control" name="name" />
+        <input className="form-control" name="name" required />
         <button className="btn btn-primary" type="submit">
           Create New List
         </button>
