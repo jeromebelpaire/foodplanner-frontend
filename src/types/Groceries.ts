@@ -18,17 +18,21 @@ interface PlannedItemBase {
 
 // Interface for planned recipes
 export interface PlannedRecipeItem extends PlannedItemBase {
-  recipe?: Recipe;
+  /** Discriminator for planned recipe items */
+  type: "recipe";
+  recipe: Recipe;
   guests: number;
   planned_on?: string;
 }
 
 // Interface for planned extras
 export interface PlannedExtraItem extends PlannedItemBase {
-  ingredient?: Ingredient;
+  /** Discriminator for planned extra items */
+  type: "extra";
+  ingredient: Ingredient;
   quantity: number;
-  unit?: Unit;
+  unit: Unit;
 }
 
 // Union type to represent either a planned recipe or extra
-export type PlannedRecipe = PlannedRecipeItem | PlannedExtraItem;
+export type PlannedItem = PlannedRecipeItem | PlannedExtraItem;

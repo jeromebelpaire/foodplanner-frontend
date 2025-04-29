@@ -2,17 +2,17 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
-import { PlannedRecipe, PlannedRecipeItem, PlannedExtraItem } from "../types/Groceries";
+import { PlannedItem } from "../types/Groceries";
 
 interface PlannedItemsListProps {
   onRecipePlanned: () => void;
   plannedItemUpdateFlag: boolean;
-  type: string;
+  type: "recipe" | "extra";
 }
 
 function PlannedItemsList({ onRecipePlanned, plannedItemUpdateFlag, type }: PlannedItemsListProps) {
   const { csrfToken } = useAuth();
-  const [plannedRecipes, setplannedRecipes] = useState<PlannedRecipe[]>([]);
+  const [plannedRecipes, setplannedRecipes] = useState<PlannedItem[]>([]);
   const { grocerylistid } = useParams();
 
   const formatted_type = type == "recipe" ? "Recipe" : "Extra";
@@ -26,8 +26,9 @@ function PlannedItemsList({ onRecipePlanned, plannedItemUpdateFlag, type }: Plan
       `/api/groceries/planned-${type}s/?grocery_list=${grocerylistid}`
     );
     const data = await res.json();
-    const dataWithDeleteUrl = data.map((item: PlannedRecipe) => ({
+    const dataWithDeleteUrl = data.map((item: PlannedItem) => ({
       ...item,
+      type: type,
       delete_url: `api/groceries/planned-${type}s/${item.id}/`,
     }));
     setplannedRecipes(dataWithDeleteUrl);
@@ -48,16 +49,6 @@ function PlannedItemsList({ onRecipePlanned, plannedItemUpdateFlag, type }: Plan
     return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" });
   }
 
-  // Type guard to check if the item is a PlannedRecipeItem
-  const isRecipeItem = (item: PlannedRecipe): item is PlannedRecipeItem => {
-    return type === "recipe";
-  };
-
-  // Type guard to check if the item is a PlannedExtraItem
-  const isExtraItem = (item: PlannedExtraItem): item is PlannedExtraItem => {
-    return type === "extra";
-  };
-
   return (
     <>
       <h4 className="my-4">{`Planned ${formatted_type}s:`}</h4>
@@ -67,17 +58,15 @@ function PlannedItemsList({ onRecipePlanned, plannedItemUpdateFlag, type }: Plan
             className="list-group-item d-flex justify-content-between align-items-center"
             key={item.id}
           >
-            {isRecipeItem(item) ? (
+            {item.type === "recipe" ? (
               <span>
-                {formatDate(item.planned_on)} - {item.recipe?.title} - {item.guests} guest
+                {formatDate(item.planned_on)} - {item.recipe.title} - {item.guests} guest
                 {item.guests !== 1 ? "s" : ""}
               </span>
             ) : (
-              isExtraItem(item) && (
-                <span>
-                  {item.ingredient?.name} - {item.quantity} {item.unit?.name}
-                </span>
-              )
+              <span>
+                {item.ingredient.name} - {item.quantity} {item.unit.name}
+              </span>
             )}
             <button
               className="btn btn-danger btn-sm delete-button"
