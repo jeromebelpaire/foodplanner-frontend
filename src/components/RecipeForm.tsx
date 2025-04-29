@@ -1,9 +1,23 @@
-import { useState, useEffect } from "react";
-import { Recipe, Ingredient, RecipeIngredient } from "../types/Recipe";
+import { useState, useEffect, useCallback } from "react";
+import { Recipe, Ingredient } from "../types/Recipe";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import AsyncSelect from "react-select/async";
+
+interface IngredientOption {
+  value: number;
+  label: string;
+}
+
+interface FormIngredientState {
+  recipeIngredientId?: number;
+  ingredientId: number | null;
+  name?: string;
+  unit: string;
+  quantity: number;
+}
 
 interface RecipeFormProps {
   recipe?: Recipe;
@@ -11,26 +25,24 @@ interface RecipeFormProps {
   onCancel: () => void;
 }
 
+const AVAILABLE_UNITS = ["g", "kg", "ml", "l", "tsp", "tbsp", "piece", "cup"];
+const DEFAULT_UNIT = AVAILABLE_UNITS[0];
+
 export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
-  const [availableIngredients, setAvailableIngredients] = useState<Ingredient[]>([]);
+  const [ingredients, setIngredients] = useState<FormIngredientState[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { csrfToken } = useAuth();
 
   const editor = useEditor({
     extensions: [StarterKit],
-    // Add editorProps to style the editable area directly
     editorProps: {
       attributes: {
-        // FIXME: This is a hack to get the editor to look good.
-        // Add Bootstrap padding classes directly to the editor
-        // This targets the <div class="ProseMirror"> element
-        class: "p-3", // Use p-2 or p-3 as needed
+        class: "p-3",
       },
     },
     content: content,
@@ -40,46 +52,58 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
   });
 
   useEffect(() => {
+    if (!recipe) return;
+    setTitle(recipe.title);
+    setContent(recipe.content || "");
+    if (recipe.image && typeof recipe.image === "string") {
+      setImagePreview(recipe.image);
+    }
+    if (recipe.recipe_ingredients) {
+      setIngredients(
+        recipe.recipe_ingredients.map((ri) => ({
+          recipeIngredientId: ri.id,
+          ingredientId: ri.ingredient?.id ?? ri.ingredient_id,
+          quantity: ri.quantity,
+          name: ri.ingredient?.name ?? ri.name,
+          unit: ri.unit || DEFAULT_UNIT,
+        }))
+      );
+    }
+  }, [recipe]);
+
+  useEffect(() => {
     if (editor && recipe?.content) {
       editor.commands.setContent(recipe.content);
     }
+  }, [editor, recipe?.content]);
 
-    const fetchIngredients = async () => {
+  const loadIngredientOptions = useCallback(
+    async (inputValue: string, callback: (options: IngredientOption[]) => void) => {
+      if (!inputValue || inputValue.length < 2) {
+        callback([]);
+        return;
+      }
       try {
-        const response = await fetchFromBackend("/api/ingredients/ingredients/", {
-          credentials: "include",
-        });
+        const response = await fetchFromBackend(
+          `/api/ingredients/ingredients/?search=${encodeURIComponent(inputValue)}&limit=20`,
+          { credentials: "include" }
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data: Ingredient[] = await response.json();
-        setAvailableIngredients(data);
-      } catch (err) {
-        setError("Failed to load ingredients. Please try again.");
-        console.error(err);
-      }
-    };
-
-    fetchIngredients();
-
-    if (recipe) {
-      setTitle(recipe.title);
-      setContent(recipe.content);
-      if (recipe.image && typeof recipe.image === "string") {
-        setImagePreview(recipe.image as string);
-      }
-      if (recipe.recipe_ingredients) {
-        const initialIngredients = recipe.recipe_ingredients.map((ri) => ({
-          id: ri.id,
-          ingredient_id: ri.ingredient?.id ?? ri.ingredient_id,
-          quantity: ri.quantity,
-          name: ri.ingredient?.name ?? ri.name,
-          unit: ri.ingredient?.unit ?? ri.unit,
+        const data = await response.json();
+        const options: IngredientOption[] = data.results.map((ing: Ingredient) => ({
+          value: ing.id,
+          label: ing.name,
         }));
-        setIngredients(initialIngredients);
+        callback(options);
+      } catch (err) {
+        console.error("Failed to load ingredient options:", err);
+        callback([]);
       }
-    }
-  }, [recipe, editor]);
+    },
+    []
+  );
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -105,8 +129,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
     setIngredients([
       ...ingredients,
       {
-        ingredient_id: availableIngredients[0]?.id || 0,
+        ingredientId: null,
         quantity: 1,
+        unit: DEFAULT_UNIT,
+        name: "",
       },
     ]);
   };
@@ -117,24 +143,41 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
     setIngredients(updatedIngredients);
   };
 
-  const handleIngredientChange = (
+  const handleIngredientSelectionChange = (
     index: number,
-    field: keyof RecipeIngredient,
-    value: string | number
+    selectedOption: IngredientOption | null
   ) => {
     const updatedIngredients = [...ingredients];
+    if (selectedOption) {
+      updatedIngredients[index] = {
+        ...updatedIngredients[index],
+        ingredientId: selectedOption.value,
+        name: selectedOption.label,
+      };
+    } else {
+      updatedIngredients[index] = {
+        ...updatedIngredients[index],
+        ingredientId: null,
+        name: "",
+      };
+    }
+    setIngredients(updatedIngredients);
+  };
 
+  const handleQuantityChange = (index: number, value: string) => {
+    const updatedIngredients = [...ingredients];
     updatedIngredients[index] = {
       ...updatedIngredients[index],
-      [field]: value,
-      name:
-        field === "ingredient_id"
-          ? availableIngredients.find((ing) => ing.id === Number(value))?.name
-          : updatedIngredients[index].name,
-      unit:
-        field === "ingredient_id"
-          ? availableIngredients.find((ing) => ing.id === Number(value))?.unit
-          : updatedIngredients[index].unit,
+      quantity: parseFloat(value) || 0,
+    };
+    setIngredients(updatedIngredients);
+  };
+
+  const handleUnitChange = (index: number, value: string) => {
+    const updatedIngredients = [...ingredients];
+    updatedIngredients[index] = {
+      ...updatedIngredients[index],
+      unit: value,
     };
     setIngredients(updatedIngredients);
   };
@@ -144,9 +187,23 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
     setLoading(true);
     setError("");
 
-    const validIngredients = ingredients.filter((ing) => ing.ingredient_id > 0);
+    const validIngredients = ingredients.filter(
+      (ing) => ing.ingredientId !== null && ing.ingredientId > 0 && ing.quantity > 0 && ing.unit
+    );
+
     if (validIngredients.length !== ingredients.length) {
-      setError("Please select a valid ingredient for all items.");
+      if (ingredients.length > 0) {
+        setError(
+          "Please select a valid ingredient, quantity > 0, and unit for all items, or remove unused rows."
+        );
+        setLoading(false);
+        return;
+      }
+    }
+
+    const incompleteIngredients = ingredients.some((ing) => ing.ingredientId === null || !ing.unit);
+    if (incompleteIngredients) {
+      setError("Please select an ingredient and unit for all added rows or remove unused rows.");
       setLoading(false);
       return;
     }
@@ -162,11 +219,17 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         formData.append("remove_image", "true");
       }
 
-      const ingredientsPayload = validIngredients.map(({ ingredient_id, quantity }) => ({
-        ingredient_id,
+      const ingredientsPayload = validIngredients.map(({ ingredientId, quantity, unit }) => ({
+        ingredient_id: ingredientId,
         quantity,
+        unit,
       }));
-      formData.append("recipe_ingredients", JSON.stringify(ingredientsPayload));
+
+      if (ingredientsPayload.length > 0) {
+        formData.append("recipe_ingredients", JSON.stringify(ingredientsPayload));
+      } else if (recipe?.id) {
+        formData.append("recipe_ingredients", JSON.stringify([]));
+      }
 
       const url = recipe?.id ? `/api/recipes/recipes/${recipe.id}/` : "/api/recipes/recipes/";
       const method = recipe?.id ? "PUT" : "POST";
@@ -182,9 +245,10 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
         console.error("Save Error Data:", errorData);
-        throw new Error(`HTTP error! status: ${response.status} - ${JSON.stringify(errorData)}`);
+        const message = errorData.detail || errorData.message || JSON.stringify(errorData);
+        throw new Error(`HTTP error! status: ${response.status} - ${message}`);
       }
 
       const savedRecipe: Recipe = await response.json();
@@ -355,25 +419,26 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           className="form-control"
         />
         {imagePreview && (
-          <div className="mt-2">
+          <div className="mt-2 position-relative d-inline-block">
             <img
               src={imagePreview}
               alt="Preview"
               className="img-thumbnail"
               style={{ maxHeight: "160px", objectFit: "cover" }}
             />
-            {recipe?.id && (
-              <button
-                type="button"
-                onClick={() => {
-                  setImage(null);
-                  setImagePreview(null);
-                }}
-                className="btn btn-link btn-sm text-danger p-0 mt-1"
-              >
-                Remove Image
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                setImage(null);
+                setImagePreview(null);
+              }}
+              className="btn btn-sm btn-danger position-absolute top-0 end-0 m-1"
+              aria-label="Remove image"
+              title="Remove image"
+              style={{ lineHeight: 1 }}
+            >
+              &times;
+            </button>
           </div>
         )}
       </div>
@@ -381,77 +446,75 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
       <div className="mb-3">
         <div className="d-flex justify-content-between align-items-center mb-2">
           <label className="form-label fw-medium mb-0">Ingredients</label>
-          <button
-            type="button"
-            onClick={handleAddIngredient}
-            className="btn btn-primary btn-sm"
-            disabled={availableIngredients.length === 0}
-          >
+          <button type="button" onClick={handleAddIngredient} className="btn btn-primary btn-sm">
             Add Ingredient
           </button>
         </div>
 
-        {availableIngredients.length === 0 && !error && (
-          <p className="text-muted fst-italic">Loading available ingredients...</p>
-        )}
-        {ingredients.length === 0 && availableIngredients.length > 0 && (
+        {ingredients.length === 0 && (
           <p className="text-muted fst-italic">No ingredients added yet.</p>
         )}
 
         <div className="mb-3">
           {ingredients.map((ingredient, index) => {
-            const selectedIngredientInfo = availableIngredients.find(
-              (ing) => ing.id === ingredient.ingredient_id
-            );
+            const currentSelectValue = ingredient.ingredientId
+              ? { value: ingredient.ingredientId, label: ingredient.name || "Loading..." }
+              : null;
+
             return (
               <div
                 key={index}
                 className="d-flex align-items-center gap-2 mb-2 p-2 border rounded bg-light"
               >
-                <select
-                  value={ingredient.ingredient_id}
-                  onChange={(e) =>
-                    handleIngredientChange(index, "ingredient_id", parseInt(e.target.value))
-                  }
-                  className="form-select"
-                  required
-                >
-                  <option value="0" disabled>
-                    Select Ingredient
-                  </option>
-                  {availableIngredients.map((ing) => (
-                    <option key={ing.id} value={ing.id}>
-                      {ing.name}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ flexGrow: 1 }}>
+                  <AsyncSelect<IngredientOption>
+                    cacheOptions
+                    defaultOptions
+                    loadOptions={loadIngredientOptions}
+                    value={currentSelectValue}
+                    onChange={(selectedOption) =>
+                      handleIngredientSelectionChange(index, selectedOption)
+                    }
+                    placeholder="Search ingredient..."
+                    isClearable
+                    required
+                  />
+                </div>
 
                 <input
                   type="number"
                   value={ingredient.quantity}
-                  onChange={(e) =>
-                    handleIngredientChange(index, "quantity", parseFloat(e.target.value) || 0)
-                  }
-                  placeholder="Quantity"
+                  onChange={(e) => handleQuantityChange(index, e.target.value)}
+                  placeholder="Qty"
                   className="form-control text-end"
-                  style={{ width: "100px" }}
+                  style={{ width: "80px" }}
                   min="0.01"
                   step="any"
                   required
+                  aria-label={`Quantity for ${ingredient.name || `ingredient ${index + 1}`}`}
                 />
-                <span
-                  className="text-muted text-truncate"
-                  style={{ width: "65px" }}
-                  title={selectedIngredientInfo?.unit || ""}
+
+                <select
+                  value={ingredient.unit}
+                  onChange={(e) => handleUnitChange(index, e.target.value)}
+                  className="form-select"
+                  style={{ width: "90px" }}
+                  required
+                  aria-label={`Unit for ${ingredient.name || `ingredient ${index + 1}`}`}
                 >
-                  {selectedIngredientInfo?.unit || "unit"}
-                </span>
+                  {AVAILABLE_UNITS.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {unit}
+                    </option>
+                  ))}
+                </select>
 
                 <button
                   type="button"
                   onClick={() => handleRemoveIngredient(index)}
-                  className="btn btn-link text-danger p-1"
+                  className="btn btn-link text-danger p-1 flex-shrink-0"
                   title="Remove Ingredient"
+                  aria-label={`Remove ${ingredient.name || `ingredient ${index + 1}`}`}
                 >
                   &times;
                 </button>
@@ -470,7 +533,16 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
         >
           Cancel
         </button>
-        <button type="submit" className="btn btn-success" disabled={loading || !title || !content}>
+        <button
+          type="submit"
+          className="btn btn-success"
+          disabled={
+            loading ||
+            !title ||
+            !content ||
+            ingredients.some((ing) => ing.ingredientId === null || !ing.unit)
+          }
+        >
           {loading ? "Saving..." : recipe ? "Update Recipe" : "Create Recipe"}
         </button>
       </div>

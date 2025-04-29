@@ -1,7 +1,7 @@
 export interface Ingredient {
   id: number;
   name: string;
-  unit: string;
+  fdc_id: string;
 }
 
 export interface RecipeIngredient {
