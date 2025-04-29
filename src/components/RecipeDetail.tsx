@@ -11,6 +11,7 @@ import RecipeRatingInput from "./RecipeRatingInput";
 interface BackendRecipeRating {
   id: number;
   rating: number; // 0-10 scale
+  comment: string | null; // Add comment field
   author_username: string;
   // Add other fields if needed
 }
@@ -311,6 +312,7 @@ export const RecipeDetail: React.FC = () => {
             <RecipeRatingInput
               recipeId={parseInt(id!)}
               initialRating={userRating?.rating ?? null}
+              initialComment={userRating?.comment ?? null}
               ratingId={userRating?.id ?? null}
               onRatingSubmitted={handleRatingSubmitted}
             />

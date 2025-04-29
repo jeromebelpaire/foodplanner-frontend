@@ -5,6 +5,7 @@ import { useAuth } from "./AuthContext";
 interface RecipeRatingInputProps {
   recipeId: number;
   initialRating: number | null; // Backend scale 0-10
+  initialComment: string | null; // Add initial comment prop
   ratingId: number | null;
   onRatingSubmitted: () => void; // Callback to refetch recipe details
 }
@@ -12,6 +13,7 @@ interface RecipeRatingInputProps {
 const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
   recipeId,
   initialRating,
+  initialComment, // Destructure new prop
   ratingId,
   onRatingSubmitted,
 }) => {
@@ -20,6 +22,8 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   // State for the rating shown on hover (0-5 scale for UI)
   const [hoverRating, setHoverRating] = useState<number | null>(null);
+  // State for the comment
+  const [comment, setComment] = useState<string>(""); // Initialize comment state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentRatingId, setCurrentRatingId] = useState<number | null>(ratingId);
@@ -27,8 +31,9 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
   useEffect(() => {
     // Convert initial backend rating (0-10) to UI scale (0-5)
     setSelectedRating(initialRating !== null ? initialRating / 2 : null);
+    setComment(initialComment ?? ""); // Set initial comment
     setCurrentRatingId(ratingId);
-  }, [initialRating, ratingId]);
+  }, [initialRating, ratingId, initialComment]); // Add initialComment to dependency array
 
   // Set hover rating to full stars (1, 2, 3, etc.)
   const handleFullStarHover = (value: number) => {
@@ -44,12 +49,16 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
     setHoverRating(null);
   };
 
+  // Determine the rating to use for submission/display
+  // Priority: Hovered rating > Selected rating
+  const ratingToSubmit = hoverRating ?? selectedRating;
+
   const handleClick = async () => {
-    // Use the hoverRating which reflects the intended half/full star based on hover position
-    const clickedUiRating = hoverRating;
+    // Use the ratingToSubmit which reflects the intended half/full star based on hover or selection
+    const clickedUiRating = ratingToSubmit;
 
     if (!csrfToken || isSubmitting || clickedUiRating === null) {
-      // Don't submit if no rating is hovered, already submitting, or no token
+      // Don't submit if no rating is hovered/selected, already submitting, or no token
       console.warn("Rating submission prevented. Conditions not met.", {
         csrfToken: !!csrfToken,
         isSubmitting,
@@ -67,8 +76,11 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
       ? `/api/recipes/ratings/${currentRatingId}/`
       : "/api/recipes/ratings/";
     const method = currentRatingId ? "PUT" : "POST";
-    const body: { rating: number; recipe?: number } = { rating: backendRating };
-    body.recipe = recipeId;
+    const body: { rating: number; comment: string; recipe: number } = {
+      rating: backendRating,
+      comment: comment.trim(),
+      recipe: recipeId,
+    };
 
     try {
       const response = await fetchFromBackend(url, {
@@ -179,7 +191,33 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
           {displayRating !== null ? displayRating.toFixed(1) : "Select"} / 5.0
         </span>
       </div>
-      {isSubmitting && <div className="text-muted small">Submitting...</div>}
+      {/* Add comment text area */}
+      <div className="mb-3">
+        <label htmlFor={`comment-${recipeId}`} className="form-label visually-hidden">
+          Add a comment (optional)
+        </label>
+        <textarea
+          id={`comment-${recipeId}`}
+          className="form-control form-control-sm"
+          rows={3}
+          placeholder="Add a comment (optional)..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          disabled={isSubmitting}
+        />
+      </div>
+      {/* Add Submit button */}
+      <div className="d-flex justify-content-end align-items-center">
+        {isSubmitting && <div className="text-muted small me-2">Submitting...</div>}
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={handleClick} // Trigger the same submit logic
+          disabled={isSubmitting || !csrfToken || ratingToSubmit === null} // Disable conditions
+          aria-label="Submit rating and comment"
+        >
+          {currentRatingId ? "Update Rating" : "Submit Rating"}
+        </button>
+      </div>
       {error && <div className="alert alert-danger alert-sm mt-2 py-1 px-2">{error}</div>}
       {!csrfToken && (
         <div className="alert alert-warning alert-sm mt-2 py-1 px-2">
