@@ -78,29 +78,33 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
   }, [editor, recipe?.content]);
 
   const loadIngredientOptions = useCallback(
-    async (inputValue: string, callback: (options: IngredientOption[]) => void) => {
+    (inputValue: string, callback: (options: IngredientOption[]) => void): void => {
       if (!inputValue || inputValue.length < 2) {
         callback([]);
         return;
       }
-      try {
-        const response = await fetchFromBackend(
-          `/api/ingredients/ingredients/?search=${encodeURIComponent(inputValue)}&limit=20`,
-          { credentials: "include" }
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        const options: IngredientOption[] = data.results.map((ing: Ingredient) => ({
-          value: ing.id,
-          label: ing.name,
-        }));
-        callback(options);
-      } catch (err) {
-        console.error("Failed to load ingredient options:", err);
-        callback([]);
-      }
+
+      fetchFromBackend(
+        `/api/ingredients/ingredients/?search=${encodeURIComponent(inputValue)}&limit=25`,
+        { credentials: "include" }
+      )
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const options: IngredientOption[] = data.results.map((ing: Ingredient) => ({
+            value: ing.id,
+            label: ing.name,
+          }));
+          callback(options);
+        })
+        .catch((err) => {
+          console.error("Failed to load ingredient options:", err);
+          callback([]);
+        });
     },
     []
   );
