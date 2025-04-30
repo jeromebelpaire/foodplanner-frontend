@@ -23,8 +23,8 @@ function App() {
           <Routes>
             <Route path="login" element={<Login />} />
             <Route path="signup" element={<Signup />} />
+            <Route index element={<HomePage />} />
             <Route element={<PrivateRoute />}>
-              <Route index element={<HomePage />} />
               <Route path="recipe/:id/:slug" element={<RecipeDetail />} />
               <Route path="grocery-lists" element={<GroceryListSelect />} />
               <Route path="grocery-list/:grocerylistid" element={<GroceryListManage />} />
