@@ -6,7 +6,7 @@ import { User } from "../types/User";
 import { fetchFromBackend } from "./fetchFromBackend";
 import StarRating from "./StarRating";
 import RecipeRatingInput from "./RecipeRatingInput";
-
+import { useAuth } from "./AuthContext";
 // Define type for backend rating object
 interface BackendRecipeRating {
   id: number;
@@ -18,6 +18,7 @@ interface BackendRecipeRating {
 
 // Add export
 export const RecipeDetail: React.FC = () => {
+  const { csrfToken } = useAuth();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -120,6 +121,9 @@ export const RecipeDetail: React.FC = () => {
         setError("");
         const response = await fetchFromBackend(`/api/recipes/recipes/${id}/`, {
           method: "DELETE",
+          headers: {
+            "X-CSRFToken": csrfToken!,
+          },
         });
 
         if (!response.ok) {
