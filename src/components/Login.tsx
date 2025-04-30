@@ -40,11 +40,11 @@ function Login() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setMessage(""); // Clear messages on new submission
+    setMessage("");
 
     if (!csrfToken) {
       setError("CSRF token not available. Please try again.");
-      fetchCsrfToken(); // Attempt to fetch it again
+      fetchCsrfToken();
       return;
     }
 
@@ -62,16 +62,13 @@ function Login() {
           return response.json();
         }
         return response.json().then((data) => {
-          // Try to get a specific error message
           let errorMessage = "Invalid credentials. Please try again.";
           if (data && data.detail) {
             errorMessage = data.detail;
           } else if (data && typeof data === "object") {
-            // Handle potential non_field_errors from DRF
             if (data.non_field_errors && Array.isArray(data.non_field_errors)) {
               errorMessage = data.non_field_errors.join(" ");
             } else {
-              // Fallback for other error structures
               const firstErrorKey = Object.keys(data)[0];
               if (firstErrorKey && Array.isArray(data[firstErrorKey])) {
                 errorMessage = `${firstErrorKey}: ${data[firstErrorKey][0]}`;
@@ -84,11 +81,8 @@ function Login() {
         });
       })
       .then(async () => {
-        // On success, update auth status and redirect
-        await checkAuthStatus(); // Update global auth state
-        // Use the user data from the login response if needed immediately
-        // console.log("Login successful, user:", data.user);
-        navigate(nextParam); // Navigate after state update
+        await checkAuthStatus();
+        navigate(nextParam);
       })
       .catch((err) => {
         setError(err.message || "An unexpected error occurred during login.");
@@ -98,22 +92,14 @@ function Login() {
 
   return (
     <div className="container mt-4">
-      {" "}
-      {/* Add container and top margin */}
       <div className="row justify-content-center">
-        {" "}
-        {/* Center the content */}
         <div className="col-md-6">
-          {" "}
-          {/* Limit width on medium screens and up */}
-          <h2 className="mb-3 text-center">Login</h2> {/* Center heading */}
-          {/* Display success message */}
+          <h2 className="mb-3 text-center">Login</h2>
           {message && (
             <div className="alert alert-success" role="alert">
               {message}
             </div>
           )}
-          {/* Display error message */}
           {error && (
             <div className="alert alert-danger" role="alert">
               {error}
@@ -121,17 +107,13 @@ function Login() {
           )}
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              {" "}
-              {/* Bootstrap margin bottom */}
               <label htmlFor="usernameInput" className="form-label">
-                {" "}
-                {/* Bootstrap label */}
                 Username
               </label>
               <input
                 type="text"
-                className="form-control" /* Bootstrap form control */
-                id="usernameInput" /* Link label to input */
+                className="form-control"
+                id="usernameInput"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -150,26 +132,25 @@ function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete="current-password" /* Correct autocomplete */
+                autoComplete="current-password"
               />
             </div>
 
             <div className="d-grid gap-2">
-              {" "}
-              {/* Use grid for full-width button + spacing */}
-              <button
-                type="submit"
-                className="btn btn-primary" /* Bootstrap button */
-                disabled={!csrfToken}
-              >
+              <button type="submit" className="btn btn-primary" disabled={!csrfToken}>
                 Log In
               </button>
             </div>
           </form>
-          {/* Link to Signup Page */}
           <div className="text-center mt-3">
             <p>
               Don't have an account? <Link to="/signup">Sign up here</Link>
+            </p>
+            <br />
+            <p>
+              <i> Does not work in incognito mode yet</i>
+              <br />
+              <i> Website is work in progress</i>
             </p>
           </div>
         </div>

@@ -5,11 +5,20 @@ export function AboutPage() {
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-8">
-          <h1 className="mb-4 text-center">About FoodPlanner</h1>
+          <h1 className="mb-4 text-center">About ShareSpice</h1>
           <p className="lead text-center mb-5">
             Streamline your meal planning, recipe organization, and grocery shopping all in one
             place. Spend less time worrying about "what's for dinner?" and more time enjoying
             delicious, home-cooked meals.
+          </p>
+
+          <p className="text-center mb-5">
+            <i>
+              The website is work in progress, please contact at sharespice.info@gmail.com if there
+              any questions or requests.
+            </i>
+            <br />
+            <i>This is a personal project so please be patient with the development</i>
           </p>
 
           <div className="card mb-4 shadow-sm">
