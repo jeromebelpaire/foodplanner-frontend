@@ -17,7 +17,7 @@ function NavBar() {
     return (
       <nav className="navbar navbar-expand-lg navbar-dark dark-navbar">
         <div className="container-fluid">
-          <span className="navbar-brand">Foodplanner</span>
+          <span className="navbar-brand">ShareSpice</span>
           <span className="navbar-text ms-auto">Loading...</span>
         </div>
       </nav>
@@ -29,7 +29,7 @@ function NavBar() {
       <nav className="navbar navbar-expand-lg navbar-dark dark-navbar">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
-            Foodplanner
+            ShareSpice
           </Link>
           <button
             className="navbar-toggler"
@@ -47,6 +47,11 @@ function NavBar() {
               <li className="nav-item">
                 <Link className="nav-link" to="/">
                   Explore Recipes
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/about">
+                  About
                 </Link>
               </li>
               {authenticated && (
