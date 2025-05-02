@@ -27,7 +27,7 @@ export const RecipeDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentUser, setCurrentUser] = useState<User>();
-  const [guestCount, setGuestCount] = useState(1);
+  const [guestCount, setGuestCount] = useState(4);
   const [scaledIngredients, setScaledIngredients] = useState<string[]>([]);
   const [loadingIngredients, setLoadingIngredients] = useState(false);
   const [userRating, setUserRating] = useState<BackendRecipeRating | null>(null);
