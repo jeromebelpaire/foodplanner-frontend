@@ -6,6 +6,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import AsyncSelect from "react-select/async";
 
+const DEFAULT_SERVINGS = 4;
+
 interface IngredientOption {
   value: number;
   label: string;
@@ -90,7 +92,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
           recipeIngredientId: ri.id,
           ingredientId: ri.ingredient?.id ?? null,
           ingredientName: ri.ingredient?.name,
-          quantity: ri.quantity,
+          quantity: ri.quantity * DEFAULT_SERVINGS,
           unitId: ri.unit?.id ?? null,
         }))
       );
@@ -251,7 +253,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
 
       const ingredientsPayload = validIngredients.map(({ ingredientId, quantity, unitId }) => ({
         ingredient_id: ingredientId,
-        quantity,
+        quantity: quantity / DEFAULT_SERVINGS,
         unit_id: unitId,
       }));
 
@@ -486,6 +488,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
             Add Ingredient
           </button>
         </div>
+        <p className="text-muted small">Quantities below are for {DEFAULT_SERVINGS} servings.</p>
 
         {ingredients.length === 0 && (
           <p className="text-muted fst-italic">No ingredients added yet.</p>
