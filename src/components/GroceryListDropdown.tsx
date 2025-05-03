@@ -52,16 +52,34 @@ function GroceryListDropdown() {
     navigate(`/grocery-list/${option!.value}`);
   };
 
-  async function deleteGroceryList(deleteUrl: string) {
-    if (!selectedList) {
-      throw new Error("Please select a list first");
+  async function deleteGroceryList() {
+    if (!selectedList || !selectedList.value) {
+      console.error("No list selected for deletion");
+      return;
     }
-    await fetchFromBackend(deleteUrl, {
-      method: "DELETE",
-      headers: { "X-CSRFToken": csrfToken! },
-      body: JSON.stringify({ grocerylists: selectedList.value }),
-    });
-    navigate(`/grocery-lists`);
+
+    const deleteUrl = `/api/groceries/lists/${selectedList.value}/`;
+
+    try {
+      const res = await fetchFromBackend(deleteUrl, {
+        method: "DELETE",
+        headers: { "X-CSRFToken": csrfToken! },
+      });
+
+      if (res.ok) {
+        setgroceryLists((prev) => {
+          const newState = { ...prev };
+          delete newState[selectedList.value!];
+          return newState;
+        });
+        setSelectedList(null);
+        navigate(`/grocery-lists`);
+      } else {
+        console.error("Failed to delete grocery list:", res.status, await res.text());
+      }
+    } catch (error) {
+      console.error("Error deleting grocery list:", error);
+    }
   }
 
   async function fetchGroceryLists() {
@@ -103,12 +121,12 @@ function GroceryListDropdown() {
         onChange={handleSelectChange}
         placeholder={`Select a list`}
       />
-      {grocerylistid && (
+      {grocerylistid && selectedList && (
         <button
-          className="btn btn-danger float-right delete-button"
-          onClick={() => deleteGroceryList(`/recipes/delete_grocerylists/`)}
+          className="btn btn-danger float-right delete-button mt-2"
+          onClick={deleteGroceryList}
         >
-          {`Delete: ${selectedList?.label}`}
+          {`Delete: ${selectedList.label}`}
         </button>
       )}
     </>
