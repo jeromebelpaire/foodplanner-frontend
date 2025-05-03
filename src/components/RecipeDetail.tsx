@@ -1,7 +1,7 @@
 // src/components/RecipeDetail.tsx
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
-import { Recipe } from "../types/Recipe";
+import { Recipe, RecipeIngredient } from "../types/Recipe";
 import { User } from "../types/User";
 import { fetchFromBackend } from "./fetchFromBackend";
 import StarRating from "./StarRating";
@@ -28,28 +28,31 @@ export const RecipeDetail: React.FC = () => {
   const [error, setError] = useState("");
   const [currentUser, setCurrentUser] = useState<User>();
   const [guestCount, setGuestCount] = useState(4);
-  const [scaledIngredients, setScaledIngredients] = useState<string[]>([]);
-  const [loadingIngredients, setLoadingIngredients] = useState(false);
   const [userRating, setUserRating] = useState<BackendRecipeRating | null>(null);
   const [userRatingLoading, setUserRatingLoading] = useState(true);
+
+  // Helper function to format scaled ingredients
+  const formatIngredient = useCallback((ingredient: RecipeIngredient, count: number): string => {
+    if (!ingredient.ingredient || !ingredient.unit) return "Invalid ingredient data";
+    const scaledQuantity = ingredient.quantity * count;
+    // Simple formatting, adjust as needed (e.g., for fractions, plurals)
+    const formattedQuantity = Number.isInteger(scaledQuantity)
+      ? scaledQuantity
+      : parseFloat(scaledQuantity.toFixed(2)); // Use parseFloat to remove trailing zeros if possible
+
+    return `${formattedQuantity} ${ingredient.unit.name} ${ingredient.ingredient.name}`;
+  }, []);
 
   const fetchRecipeData = useCallback(async () => {
     if (!id) return;
     try {
-      const [recipeResponse, ingredientsResponse] = await Promise.all([
-        fetchFromBackend(`/api/recipes/recipes/${id}/`),
-        fetchFromBackend(`/api/recipes/recipes/${id}/formatted_ingredients/?guests=${guestCount}`),
-      ]);
+      const recipeResponse = await fetchFromBackend(`/api/recipes/recipes/${id}/`);
 
       if (!recipeResponse.ok) throw new Error(`Recipe fetch failed: ${recipeResponse.statusText}`);
-      if (!ingredientsResponse.ok)
-        throw new Error(`Ingredients fetch failed: ${ingredientsResponse.statusText}`);
 
       const recipeData = await recipeResponse.json();
-      const ingredientsData = await ingredientsResponse.json();
 
       setRecipe(recipeData);
-      setScaledIngredients(ingredientsData.ingredients);
     } catch (err) {
       console.error(err);
       setError(
@@ -58,7 +61,7 @@ export const RecipeDetail: React.FC = () => {
         }`
       );
     }
-  }, [id, guestCount]);
+  }, [id]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -141,28 +144,30 @@ export const RecipeDetail: React.FC = () => {
   };
 
   const handleRatingSubmitted = useCallback(() => {
-    fetchRecipeData();
-  }, [fetchRecipeData]);
-
-  const updateGuestCount = async (count: number) => {
-    if (!id || count < 1) return;
-    setGuestCount(count);
-    setLoadingIngredients(true);
-    try {
-      const response = await fetchFromBackend(
-        `/api/recipes/recipes/${id}/formatted_ingredients/?guests=${count}`
-      );
-      if (!response.ok) {
-        throw new Error(`Failed to update ingredients: ${response.statusText}`);
+    const fetchRatingRelatedData = async () => {
+      if (!id) return;
+      try {
+        const recipeResponse = await fetchFromBackend(`/api/recipes/recipes/${id}/`);
+        if (recipeResponse.ok) {
+          const updatedRecipeData = await recipeResponse.json();
+          setRecipe((prevRecipe) => ({ ...prevRecipe, ...updatedRecipeData }));
+        } else {
+          console.error("Failed to re-fetch recipe data after rating.");
+        }
+      } catch (err) {
+        console.error("Error fetching data after rating submission:", err);
       }
-      const data = await response.json();
-      setScaledIngredients(data.ingredients);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingIngredients(false);
+    };
+    fetchRatingRelatedData();
+  }, [id]);
+
+  // Calculate scaled ingredients dynamically using useMemo
+  const scaledIngredientsList = useMemo(() => {
+    if (!recipe?.recipe_ingredients || guestCount < 1) {
+      return [];
     }
-  };
+    return recipe.recipe_ingredients.map((ing) => formatIngredient(ing, guestCount));
+  }, [recipe?.recipe_ingredients, guestCount, formatIngredient]);
 
   const canEditRecipe = () => {
     if (!currentUser || !recipe) return false;
@@ -281,32 +286,29 @@ export const RecipeDetail: React.FC = () => {
                         type="number"
                         min="1"
                         value={guestCount}
-                        onChange={(e) => updateGuestCount(parseInt(e.target.value) || 1)}
+                        onChange={(e) => setGuestCount(parseInt(e.target.value) || 1)}
                         className="form-control form-control-sm"
                         style={{ width: "4rem" }}
                         aria-label="Number of guests"
-                        disabled={loadingIngredients}
                       />
                     </div>
                   </div>
 
-                  {loadingIngredients ? (
-                    <div className="text-center text-muted small py-3">Updating ingredients...</div>
-                  ) : (
-                    <ul className="list-group list-group-flush">
-                      {scaledIngredients.length > 0 ? (
-                        scaledIngredients.map((item, i) => (
-                          <li key={i} className="list-group-item bg-transparent px-0 py-1 border-0">
-                            {item}
-                          </li>
-                        ))
-                      ) : (
-                        <li className="list-group-item bg-transparent px-0 py-1 border-0 fst-italic text-muted">
-                          No ingredients listed for this recipe.
+                  <ul className="list-group list-group-flush">
+                    {scaledIngredientsList.length > 0 ? (
+                      scaledIngredientsList.map((item, i) => (
+                        <li key={i} className="list-group-item bg-transparent px-0 py-1 border-0">
+                          {item}
                         </li>
-                      )}
-                    </ul>
-                  )}
+                      ))
+                    ) : (
+                      <li className="list-group-item bg-transparent px-0 py-1 border-0 fst-italic text-muted">
+                        {recipe?.recipe_ingredients === undefined
+                          ? "Loading ingredients..."
+                          : "No ingredients listed for this recipe."}
+                      </li>
+                    )}
+                  </ul>
                 </div>
               </div>
             </div>
