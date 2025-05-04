@@ -18,17 +18,14 @@ const Feed: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetchFromBackend("/api/feed/items/");
+        const response = await fetchFromBackend(
+          "/api/feed/items/?exclude_event_types=update_recipe"
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-
-        // Filter out 'update_recipe' events before setting the state
-        const filteredEvents = data.results.filter(
-          (event: FeedEvent) => event.event_type !== FeedEventType.UPDATE_RECIPE
-        );
-        setFeedEvents(filteredEvents);
+        setFeedEvents(data.results);
         setNextPageUrl(data.next);
       } catch (err) {
         console.error("Error fetching feed:", err);
