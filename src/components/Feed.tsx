@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { FeedEvent, FeedEventType } from "../types/FeedEvent";
 import FeedItemCard from "./FeedItemCard";
@@ -10,9 +10,11 @@ const Feed: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showFollowModal, setShowFollowModal] = useState<boolean>(false);
+  const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
 
   useEffect(() => {
-    const loadFeed = async () => {
+    const loadInitialFeed = async () => {
       setLoading(true);
       setError(null);
       try {
@@ -27,6 +29,7 @@ const Feed: React.FC = () => {
           (event: FeedEvent) => event.event_type !== FeedEventType.UPDATE_RECIPE
         );
         setFeedEvents(filteredEvents);
+        setNextPageUrl(data.next);
       } catch (err) {
         console.error("Error fetching feed:", err);
         setError(
@@ -37,8 +40,59 @@ const Feed: React.FC = () => {
       }
     };
 
-    loadFeed();
+    loadInitialFeed();
   }, []);
+
+  const loadMoreFeedItems = useCallback(async () => {
+    if (!nextPageUrl || isLoadingMore || loading) return;
+
+    setIsLoadingMore(true);
+    setError(null);
+    try {
+      const response = await fetchFromBackend(nextPageUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // Filter the newly fetched events
+      const filteredNewEvents = data.results.filter(
+        (event: FeedEvent) => event.event_type !== FeedEventType.UPDATE_RECIPE
+      );
+
+      setFeedEvents((prevEvents) => [...prevEvents, ...filteredNewEvents]);
+      setNextPageUrl(data.next);
+    } catch (err) {
+      console.error("Error fetching more feed items:", err);
+      setError(
+        `Failed to load more items. ${
+          err instanceof Error ? err.message : "Please try again later."
+        }`
+      );
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [nextPageUrl, isLoadingMore, loading]);
+
+  // --- Effect for scroll detection ---
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if scrolled close to the bottom
+      // Offset (e.g., 300px) determines how early to trigger loading
+      const scrolledToBottom =
+        window.innerHeight + document.documentElement.scrollTop >=
+        document.documentElement.offsetHeight - 300;
+
+      if (scrolledToBottom) {
+        loadMoreFeedItems();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    // Cleanup function to remove the event listener
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loadMoreFeedItems]); // Re-run effect if loadMoreFeedItems changes
 
   return (
     <div className="container mt-4">
@@ -82,6 +136,15 @@ const Feed: React.FC = () => {
               {feedEvents.map((event) => (
                 <FeedItemCard key={event.id} event={event} />
               ))}
+            </div>
+          )}
+
+          {/* Loading indicator for loading more items */}
+          {isLoadingMore && (
+            <div className="d-flex justify-content-center my-3">
+              <div className="spinner-border spinner-border-sm text-secondary" role="status">
+                <span className="visually-hidden">Loading more...</span>
+              </div>
             </div>
           )}
         </div>
