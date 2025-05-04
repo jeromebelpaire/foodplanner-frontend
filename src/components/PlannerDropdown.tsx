@@ -1,9 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import Select from "react-select";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
 import { Recipe, Ingredient, Unit } from "../types/Recipe";
+import AsyncSelect from "react-select/async";
+
+interface SelectOption {
+  value: number;
+  label: string;
+}
 
 // Configuration for 'recipe' type
 const recipeConfig = {
@@ -53,44 +58,28 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
   const { csrfToken } = useAuth();
   const { grocerylistid } = useParams<{ grocerylistid?: string }>();
 
-  // Type guarded state variables
-  const [items, setItems] = useState<(Recipe | Ingredient)[]>([]);
-  const [selectedItem, setSelectedItem] = useState<{ value: number; label: string } | null>(null);
+  // Remove items state, selectedItem now uses SelectOption type
+  const [selectedItem, setSelectedItem] = useState<SelectOption | null>(null);
   const [quantity, setQuantity] = useState("");
   const [planDate, setPlanDate] = useState("");
   const [selectedUnitId, setSelectedUnitId] = useState<string>("");
   const [availableUnits, setAvailableUnits] = useState<Unit[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch items based on the selected config's endpoint
   useEffect(() => {
     // Ensure grocerylistid is present before doing anything
     if (!grocerylistid) {
       setError("Grocery list ID is missing from URL.");
       return;
     }
-
     let isMounted = true;
-    async function fetchItemsAndUnits() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // Fetch items (Recipes or Ingredients)
-        const itemsRes = await fetchFromBackend(config.apiEndpoint, { credentials: "include" });
-        if (!itemsRes.ok) {
-          throw new Error(`HTTP error fetching items! status: ${itemsRes.status}`);
-        }
-        const itemsData = await itemsRes.json();
-        const fetchedItems = Array.isArray(itemsData) ? itemsData : itemsData.results || [];
 
-        if (isMounted) {
-          setItems(fetchedItems);
-        }
-
-        // Fetch units if needed for the current type
-        if (config.needsUnitField) {
+    // Fetch units only if needed for the current type
+    if (config.needsUnitField) {
+      async function fetchUnits() {
+        setError(null);
+        try {
           const unitsRes = await fetchFromBackend("/api/ingredients/units/", {
             credentials: "include",
           });
@@ -102,31 +91,29 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
             unitsData.sort((a, b) => a.name.localeCompare(b.name));
             setAvailableUnits(unitsData);
           }
-        }
-      } catch (err) {
-        console.error(`Failed to fetch data for ${config.formattedName}:`, err);
-        if (isMounted) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : `Could not load ${config.formattedName}s or Units. Please try again.`
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
+        } catch (err) {
+          console.error(`Failed to fetch units:`, err);
+          if (isMounted) {
+            setError(
+              err instanceof Error ? err.message : `Could not load Units. Please try again.`
+            );
+          }
         }
       }
+      fetchUnits();
+    } else {
+      // If units are not needed, clear any previous unit state/error
+      setAvailableUnits([]);
+      if (error?.includes("Units")) setError(null);
     }
-
-    fetchItemsAndUnits();
 
     return () => {
       isMounted = false;
     };
-  }, [config, grocerylistid]);
+    // Dependency array includes config.needsUnitField to re-run if type changes
+  }, [grocerylistid, config.needsUnitField, error]);
 
-  const handleSelectChange = (option: { value: number; label: string } | null) => {
+  const handleSelectChange = (option: SelectOption | null) => {
     setSelectedItem(option);
     setQuantity("");
     setPlanDate("");
@@ -199,25 +186,56 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
     onPlanned,
   ]);
 
-  // Generate options for react-select
-  const options = items.map((item) => {
-    // Type guard to ensure we use the correct option label based on the item type
-    if (type === "recipe" && "title" in item) {
-      return {
-        value: item.id,
-        label: recipeConfig.getOptionLabel(item as Recipe),
-      };
-    } else if (type === "extra" && "name" in item) {
-      return {
-        value: item.id,
-        label: extraConfig.getOptionLabel(item as Ingredient),
-      };
-    }
-    return {
-      value: item.id,
-      label: String(item.id), // Fallback
-    };
-  });
+  // Function to load options dynamically for AsyncSelect
+  const loadOptions = useCallback(
+    (inputValue: string, callback: (options: SelectOption[]) => void): void => {
+      // Don't search if input is too short
+      if (!inputValue || inputValue.length < 2) {
+        callback([]);
+        return;
+      }
+
+      // Construct the search URL
+      const searchUrl = `${config.apiEndpoint}?search=${encodeURIComponent(inputValue)}&limit=20`; // Limit results
+
+      fetchFromBackend(searchUrl, { credentials: "include" })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const results = Array.isArray(data) ? data : data.results || [];
+          const formattedOptions: SelectOption[] = results.map(
+            (item: Recipe | Ingredient): SelectOption => {
+              let label: string;
+              // Type guard to ensure correct property access
+              if (config.type === "recipe" && "title" in item) {
+                label = config.getOptionLabel(item as Recipe);
+              } else if (config.type === "extra" && "name" in item) {
+                label = config.getOptionLabel(item as Ingredient);
+              } else {
+                // Fallback or handle unexpected item types
+                console.warn("Unexpected item type encountered in loadOptions:", item);
+                label = `Item ID: ${item.id}`;
+              }
+              return {
+                value: item.id,
+                label: label,
+              };
+            }
+          );
+          callback(formattedOptions);
+        })
+        .catch((err) => {
+          console.error(`Failed to load ${config.formattedName} options:`, err);
+          // Optionally inform the user via setError or console
+          callback([]);
+        });
+    },
+    [config] // Depends on the config (which changes with 'type')
+  );
 
   if (!grocerylistid) {
     return <div className="alert alert-warning">Missing Grocery List context.</div>;
@@ -228,13 +246,14 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
       <h3 className="mb-3 h5">{`Plan a ${config.formattedName}`}</h3>
       {error && <div className="alert alert-danger small p-2 mb-2">{error}</div>}
       <div className="mb-2">
-        <Select
-          options={options}
+        <AsyncSelect<SelectOption> // Specify the option type
+          cacheOptions // Cache results
+          defaultOptions // Load default options on mount (optional, depends on API)
+          loadOptions={loadOptions} // Function to fetch options
           value={selectedItem}
           onChange={handleSelectChange}
           placeholder={config.selectPlaceholder}
-          isLoading={isLoading}
-          isClearable
+          isClearable // Allow clearing the selection
           inputId={`select-${type}`}
           aria-label={config.selectPlaceholder}
         />
@@ -305,7 +324,12 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
           <button
             onClick={handlePost}
             className="btn btn-primary btn-sm"
-            disabled={isPosting || !quantity || (config.needsUnitField && !selectedUnitId)}
+            disabled={
+              isPosting ||
+              !quantity ||
+              (config.needsUnitField && !selectedUnitId) ||
+              (config.needsDateField && !planDate && type === "recipe")
+            }
           >
             {isPosting ? "Planning..." : `Plan ${config.formattedName}`}
           </button>
