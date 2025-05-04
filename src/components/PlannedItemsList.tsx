@@ -59,21 +59,33 @@ function PlannedItemsList({ onRecipePlanned, plannedItemUpdateFlag, type }: Plan
             key={item.id}
           >
             {item.type === "recipe" ? (
-              <span>
+              <span className="flex-grow-1 me-3">
                 {formatDate(item.planned_on)} - {item.recipe.title} - {item.guests} guest
                 {item.guests !== 1 ? "s" : ""}
               </span>
             ) : (
-              <span>
+              <span className="flex-grow-1 me-3">
                 {item.ingredient.name} - {item.quantity} {item.unit.name}
               </span>
             )}
-            <button
-              className="btn btn-danger btn-sm delete-button"
-              onClick={() => deletePlannedRecipe(item.delete_url!)}
-            >
-              Delete
-            </button>
+            <div className="d-flex align-items-center">
+              {item.type === "recipe" && (
+                <a
+                  href={`/recipes/${item.recipe.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-info btn-sm me-2"
+                >
+                  View Recipe
+                </a>
+              )}
+              <button
+                className="btn btn-danger btn-sm delete-button"
+                onClick={() => deletePlannedRecipe(item.delete_url!)}
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>

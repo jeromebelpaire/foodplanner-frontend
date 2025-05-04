@@ -324,12 +324,7 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
           <button
             onClick={handlePost}
             className="btn btn-primary btn-sm"
-            disabled={
-              isPosting ||
-              !quantity ||
-              (config.needsUnitField && !selectedUnitId) ||
-              (config.needsDateField && !planDate && type === "recipe")
-            }
+            disabled={isPosting || !quantity || (config.needsUnitField && !selectedUnitId)}
           >
             {isPosting ? "Planning..." : `Plan ${config.formattedName}`}
           </button>
