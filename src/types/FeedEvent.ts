@@ -6,7 +6,6 @@ export enum FeedEventType {
   NEW_RATING = "new_rating",
   UPDATE_RECIPE = "update_recipe",
   UPDATE_RATING = "update_rating",
-  // Add other event types if needed
 }
 
 export interface FeedEvent {
@@ -16,8 +15,6 @@ export interface FeedEvent {
   created_on: string;
   recipe: Recipe;
   rating?: RecipeRating;
-
-  // Added fields
   like_count: number;
   comment_count: number;
   is_liked_by_user: boolean;

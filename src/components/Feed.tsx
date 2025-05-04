@@ -1,9 +1,8 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
-import { FeedEvent } from "../types/FeedEvent";
+import { FeedEvent, FeedEventType } from "../types/FeedEvent";
 import FeedItemCard from "./FeedItemCard";
 
-// Lazy load the FollowUsers component
 const FollowUsers = lazy(() => import("./FollowUsers"));
 
 const Feed: React.FC = () => {
@@ -21,8 +20,13 @@ const Feed: React.FC = () => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data: FeedEvent[] = await response.json();
-        setFeedEvents(data);
+        const data = await response.json();
+
+        // Filter out 'update_recipe' events before setting the state
+        const filteredEvents = data.results.filter(
+          (event: FeedEvent) => event.event_type !== FeedEventType.UPDATE_RECIPE
+        );
+        setFeedEvents(filteredEvents);
       } catch (err) {
         console.error("Error fetching feed:", err);
         setError(
@@ -48,7 +52,7 @@ const Feed: React.FC = () => {
               onClick={() => setShowFollowModal(true)}
               aria-label="Manage users you follow"
             >
-              <i className="bi bi-person-plus me-1"></i> {/* Optional icon */}
+              <i className="bi bi-person-plus me-1"></i>
               Manage Following
             </button>
           </div>
@@ -83,7 +87,6 @@ const Feed: React.FC = () => {
         </div>
       </div>
 
-      {/* Follow Users Modal */}
       <div
         className={`modal fade ${showFollowModal ? "show d-block" : ""}`}
         id="followUsersModal"
