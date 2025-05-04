@@ -5,7 +5,7 @@ import { User } from "../types/User";
 import { Link } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
-import StarRating from "./StarRating"; // Import StarRating component
+import StarRating from "./StarRating";
 
 // Add export
 export const RecipeList: React.FC = () => {
@@ -40,7 +40,7 @@ export const RecipeList: React.FC = () => {
         const recipesData = await recipesResponse.json();
 
         setCurrentUser(userData.user);
-        setRecipes(recipesData);
+        setRecipes(recipesData.results);
       } catch (err) {
         console.error(err);
         setError(

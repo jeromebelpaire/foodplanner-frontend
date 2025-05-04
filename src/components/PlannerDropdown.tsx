@@ -8,7 +8,7 @@ import { Recipe, Ingredient, Unit } from "../types/Recipe";
 // Configuration for 'recipe' type
 const recipeConfig = {
   type: "recipe" as const,
-  apiEndpoint: "/api/recipes/recipes/?limit=1000",
+  apiEndpoint: "/api/recipes/recipes/",
   postEndpoint: "/api/groceries/planned-recipes/",
   selectPlaceholder: "Select a Recipe",
   quantityLabel: "Guests",
@@ -23,7 +23,7 @@ const recipeConfig = {
 // Configuration for 'extra' type (Ingredient)
 const extraConfig = {
   type: "extra" as const,
-  apiEndpoint: "/api/ingredients/ingredients/?limit=1000",
+  apiEndpoint: "/api/ingredients/ingredients/",
   postEndpoint: "/api/groceries/planned-extras/",
   selectPlaceholder: "Select an Extra Ingredient",
   quantityLabel: "Quantity",
