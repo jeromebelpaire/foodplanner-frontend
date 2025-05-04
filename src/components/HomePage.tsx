@@ -10,13 +10,37 @@ function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 
   useEffect(() => {
-    const fetchInitialRecipes = async () => {
+    const handler = setTimeout(() => {
+      if (searchTerm === "" || searchTerm.length >= 2) {
+        setDebouncedSearchTerm(searchTerm);
+      } else {
+        setDebouncedSearchTerm("");
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const fetchRecipes = async () => {
       setIsLoading(true);
       setError(null);
+      setRecipes([]);
+      setNextPageUrl(null);
+
+      let url = "/api/recipes/recipes/";
+      if (debouncedSearchTerm) {
+        url += `?search=${encodeURIComponent(debouncedSearchTerm)}`;
+      }
+
       try {
-        const res = await fetchFromBackend("/api/recipes/recipes/");
+        const res = await fetchFromBackend(url);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -24,7 +48,7 @@ function HomePage() {
         setRecipes(data.results);
         setNextPageUrl(data.next);
       } catch (err) {
-        console.error("Error fetching initial recipes:", err);
+        console.error("Error fetching recipes:", err);
         setError(
           `Failed to load recipes. ${
             err instanceof Error ? err.message : "Please try again later."
@@ -34,15 +58,22 @@ function HomePage() {
         setIsLoading(false);
       }
     };
-    fetchInitialRecipes();
-  }, []);
+
+    if (debouncedSearchTerm === "" || debouncedSearchTerm.length >= 2) {
+      fetchRecipes();
+    } else {
+      setRecipes([]);
+      setNextPageUrl(null);
+      setIsLoading(false);
+      setError(null);
+    }
+  }, [debouncedSearchTerm]);
 
   // Function to load more recipes
   const loadMoreRecipes = useCallback(async () => {
-    if (!nextPageUrl || isLoadingMore || isLoading) return; // Prevent multiple fetches
+    if (!nextPageUrl || isLoadingMore || isLoading || searchTerm.length === 1) return;
 
     setIsLoadingMore(true);
-    // Don't clear the main error, maybe show a temporary one if needed
     try {
       const res = await fetchFromBackend(nextPageUrl);
       if (!res.ok) {
@@ -53,12 +84,10 @@ function HomePage() {
       setNextPageUrl(data.next);
     } catch (err) {
       console.error("Error fetching more recipes:", err);
-      // Optionally set a specific error for loading more, or just log it
-      // setError(`Failed to load more recipes. ${err.message}`);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [nextPageUrl, isLoadingMore, isLoading]); // Dependencies
+  }, [nextPageUrl, isLoadingMore, isLoading, searchTerm]);
 
   // Effect for scroll detection
   useEffect(() => {
@@ -79,7 +108,18 @@ function HomePage() {
   return (
     <>
       <div className="container py-5">
-        <h1 className="mb-5">Latest Recipes</h1>
+        <h1 className="mb-3">Latest Recipes</h1>
+
+        <div className="mb-4">
+          <input
+            type="search"
+            className="form-control"
+            placeholder="Search recipes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Search recipes"
+          />
+        </div>
 
         {/* Initial Loading Indicator */}
         {isLoading && (
