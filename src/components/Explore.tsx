@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Recipe } from "../types/Recipe";
 import StarRating from "./StarRating";
 
-function HomePage() {
+function Explore() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -187,4 +187,4 @@ function HomePage() {
   );
 }
 
-export default HomePage;
+export default Explore;
