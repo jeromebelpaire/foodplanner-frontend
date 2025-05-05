@@ -4,7 +4,7 @@ import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
 
 function Signup() {
-  const { csrfToken, fetchCsrfToken, authenticated } = useAuth();
+  const { csrfToken, fetchCsrfToken, authenticated, checkAuthStatus } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -58,29 +58,55 @@ function Signup() {
     })
       .then((response) => {
         if (response.ok) {
-          return response.json();
+          return fetchFromBackend("/api/auth/login/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken!,
+            },
+            body: JSON.stringify({ username, password }),
+          });
         }
         return response.json().then((data) => {
           let errorMessage = "Signup failed. Please try again.";
           if (data.detail) {
             errorMessage = data.detail;
           } else if (typeof data === "object" && data !== null) {
-            // Check for DRF validation errors (field names as keys)
             const firstErrorKey = Object.keys(data)[0];
             if (firstErrorKey && Array.isArray(data[firstErrorKey])) {
-              // Combine field name and error message
               errorMessage = `${firstErrorKey
                 .replace(/_/g, " ")
                 .replace(/\b\w/g, (l) => l.toUpperCase())}: ${data[firstErrorKey][0]}`;
             } else {
               errorMessage = JSON.stringify(data);
             }
-          } // Added check for null
+          }
           throw new Error(errorMessage);
         });
       })
-      .then(() => {
-        navigate("/login?signupSuccess=true");
+      .then((loginResponse) => {
+        if (loginResponse.ok) {
+          fetchCsrfToken();
+          return loginResponse.json().then(async () => {
+            await checkAuthStatus();
+            navigate("/");
+          });
+        }
+        return loginResponse.json().then((data) => {
+          let loginErrorMessage =
+            "Signup successful, but auto-login failed. Please log in manually.";
+          if (data && data.detail) {
+            loginErrorMessage = `Signup successful, but auto-login failed: ${data.detail}. Please log in manually.`;
+          } else if (data && typeof data === "object") {
+            if (data.non_field_errors && Array.isArray(data.non_field_errors)) {
+              loginErrorMessage = `Signup successful, but auto-login failed: ${data.non_field_errors.join(
+                " "
+              )}. Please log in manually.`;
+            }
+          }
+          setError(loginErrorMessage);
+          navigate("/login");
+        });
       })
       .catch((err) => {
         setError(err.message || "An unexpected error occurred.");
