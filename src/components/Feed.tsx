@@ -135,7 +135,7 @@ const Feed: React.FC = () => {
 
           {!loading && !error && feedEvents.length === 0 && (
             <div className="alert alert-secondary text-center" role="alert">
-              No recent activity to display.
+              No recent activity to display. Follow some users to get started!
             </div>
           )}
 
