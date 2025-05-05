@@ -7,7 +7,13 @@ interface AuthContextData {
   csrfToken: string | null;
   isLoading: boolean;
   authenticated: boolean;
-  user: { id: number; username: string; is_superuser: boolean } | null;
+  user: {
+    id: number;
+    username: string;
+    is_superuser: boolean;
+    follower_count: number;
+    following_count: number;
+  } | null;
   fetchCsrfToken: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
   logout: () => Promise<void>;
@@ -20,9 +26,13 @@ const AuthContext = createContext<AuthContextData | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<{ id: number; username: string; is_superuser: boolean } | null>(
-    null
-  );
+  const [user, setUser] = useState<{
+    id: number;
+    username: string;
+    is_superuser: boolean;
+    follower_count: number;
+    following_count: number;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true); // Track initial loading
   const navigate = useNavigate();
 

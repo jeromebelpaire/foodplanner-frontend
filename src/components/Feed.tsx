@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { FeedEvent, FeedEventType } from "../types/FeedEvent";
 import FeedItemCard from "./FeedItemCard";
+import { useAuth } from "./AuthContext";
 
 const FollowUsers = lazy(() => import("./FollowUsers"));
 
@@ -12,6 +13,7 @@ const Feed: React.FC = () => {
   const [showFollowModal, setShowFollowModal] = useState<boolean>(false);
   const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadInitialFeed = async () => {
@@ -95,8 +97,8 @@ const Feed: React.FC = () => {
     <div className="container mt-4">
       <div className="row justify-content-center">
         <div className="col-lg-8 col-md-10">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="mb-0">Activity Feed</h2>
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <h2 className="mb-0">What's everyone cooking?</h2>
             <button
               className="btn btn-outline-secondary btn-sm"
               type="button"
@@ -107,6 +109,15 @@ const Feed: React.FC = () => {
               Manage Following
             </button>
           </div>
+
+          {user && (
+            <div className="d-flex justify-content-end text-muted mb-3 small">
+              <span className="me-3">
+                {user.follower_count} Follower{user.follower_count !== 1 ? "s" : ""}
+              </span>
+              <span>{user.following_count} Following</span>
+            </div>
+          )}
 
           {loading && (
             <div className="d-flex justify-content-center my-5">

@@ -1,4 +1,4 @@
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useEffect } from "react";
 import AsyncSelect from "react-select/async";
 import { StylesConfig } from "react-select";
 import { fetchFromBackend } from "./fetchFromBackend";
@@ -11,10 +11,28 @@ interface UserOption {
   is_following: boolean;
 }
 
+// Add a simple type for follower data (can reuse SearchedUser if structure matches)
+interface Follower {
+  id: number;
+  username: string;
+}
+
+// Type for users the current user is following
+interface FollowingUser {
+  id: number;
+  username: string;
+}
+
 function FollowUsers() {
   const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
   const [isSubmitting, startSubmitting] = useTransition();
   const [followError, setFollowError] = useState<string | null>(null);
+  const [followers, setFollowers] = useState<Follower[]>([]);
+  const [isLoadingFollowers, setIsLoadingFollowers] = useState<boolean>(true);
+  const [followersError, setFollowersError] = useState<string | null>(null);
+  const [following, setFollowing] = useState<FollowingUser[]>([]);
+  const [isLoadingFollowing, setIsLoadingFollowing] = useState<boolean>(true);
+  const [followingError, setFollowingError] = useState<string | null>(null);
 
   const { csrfToken } = useAuth();
   // Debounced function to load user options
@@ -41,6 +59,58 @@ function FollowUsers() {
     },
     []
   );
+
+  // --- Fetch followers ---
+  useEffect(() => {
+    const fetchFollowers = async () => {
+      setIsLoadingFollowers(true);
+      setFollowersError(null);
+      try {
+        const response = await fetchFromBackend("/api/users/followers/");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setFollowers(data.results || []); // Assuming paginated response
+      } catch (err) {
+        console.error("Error fetching followers:", err);
+        setFollowersError(
+          `Failed to load followers. ${err instanceof Error ? err.message : "Please try again."}`
+        );
+      } finally {
+        setIsLoadingFollowers(false);
+      }
+    };
+
+    fetchFollowers();
+  }, []);
+
+  // --- Fetch users the current user is following ---
+  useEffect(() => {
+    const fetchFollowing = async () => {
+      setIsLoadingFollowing(true);
+      setFollowingError(null);
+      try {
+        const response = await fetchFromBackend("/api/users/following/");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setFollowing(data.results || []); // Assuming paginated response
+      } catch (err) {
+        console.error("Error fetching following list:", err);
+        setFollowingError(
+          `Failed to load who you are following. ${
+            err instanceof Error ? err.message : "Please try again."
+          }`
+        );
+      } finally {
+        setIsLoadingFollowing(false);
+      }
+    };
+
+    fetchFollowing();
+  }, []);
 
   // Handler for follow/unfollow button click
   const handleFollowToggle = useCallback(() => {
@@ -134,6 +204,75 @@ function FollowUsers() {
       )}
 
       {followError && <div className="alert alert-danger mt-2 py-1 px-2 small">{followError}</div>}
+
+      <hr className="my-4" />
+
+      {/* --- Followers List Section --- */}
+      <h5 className="mb-3">Your Followers</h5>
+      {isLoadingFollowers && (
+        <div className="d-flex justify-content-center my-3">
+          <div className="spinner-border spinner-border-sm text-secondary" role="status">
+            <span className="visually-hidden">Loading followers...</span>
+          </div>
+        </div>
+      )}
+      {followersError && (
+        <div className="alert alert-warning text-center py-1 px-2 small" role="alert">
+          {followersError}
+        </div>
+      )}
+      {!isLoadingFollowers && !followersError && followers.length === 0 && (
+        <div className="text-muted text-center small py-2">You don't have any followers yet.</div>
+      )}
+      {!isLoadingFollowers && !followersError && followers.length > 0 && (
+        <div
+          className="list-group list-group-flush overflow-auto mb-3"
+          style={{ maxHeight: "150px" }}
+        >
+          {followers.map((follower) => (
+            <div
+              key={follower.id}
+              className="list-group-item d-flex justify-content-between align-items-center py-1 px-2"
+            >
+              <span>{follower.username}</span>
+              {/* Optional: Add a button/link to view follower's profile */}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <hr className="my-4" />
+
+      {/* --- Following List Section --- */}
+      <h5 className="mb-3">Users You Follow</h5>
+      {isLoadingFollowing && (
+        <div className="d-flex justify-content-center my-3">
+          <div className="spinner-border spinner-border-sm text-secondary" role="status">
+            <span className="visually-hidden">Loading following list...</span>
+          </div>
+        </div>
+      )}
+      {followingError && (
+        <div className="alert alert-warning text-center py-1 px-2 small" role="alert">
+          {followingError}
+        </div>
+      )}
+      {!isLoadingFollowing && !followingError && following.length === 0 && (
+        <div className="text-muted text-center small py-2">You are not following anyone yet.</div>
+      )}
+      {!isLoadingFollowing && !followingError && following.length > 0 && (
+        <div className="list-group list-group-flush overflow-auto" style={{ maxHeight: "150px" }}>
+          {following.map((followedUser) => (
+            <div
+              key={followedUser.id}
+              className="list-group-item d-flex justify-content-between align-items-center py-1 px-2"
+            >
+              <span>{followedUser.username}</span>
+              {/* Optional: Add unfollow button or link */}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
