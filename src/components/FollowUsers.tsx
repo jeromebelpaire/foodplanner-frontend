@@ -20,19 +20,14 @@ function FollowUsers() {
   // Debounced function to load user options
   const loadOptions = useCallback(
     (inputValue: string, callback: (options: UserOption[]) => void) => {
-      // Don't search if input is too short
-      if (!inputValue || inputValue.length < 2) {
-        callback([]);
-        return;
-      }
-
       fetchFromBackend(`/api/users/search/?query=${encodeURIComponent(inputValue)}`)
         .then((response) => {
           if (!response.ok) throw new Error("Failed to fetch users");
           return response.json();
         })
-        .then((data: SearchedUser[]) => {
-          const options: UserOption[] = data.map((user) => ({
+        .then((response) => {
+          const data = response.results;
+          const options: UserOption[] = data.map((user: SearchedUser) => ({
             value: user.id,
             label: user.username,
             is_following: user.is_following,
