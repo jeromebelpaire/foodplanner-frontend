@@ -16,6 +16,7 @@ import LandingPage from "./components/LandingPage";
 import Explore from "./components/Explore";
 import { TermsOfServicePage } from "./components/TermsOfServicePage";
 import { Footer } from "./components/Footer";
+import { CookiePolicyPage } from "./components/CookiePolicyPage";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="/explore" element={<Explore />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+            <Route path="/cookie-policy" element={<CookiePolicyPage />} />
             <Route element={<PrivateRoute />}>
               <Route path="recipe/:id/:slug" element={<RecipeDetail />} />
               <Route path="grocery-lists" element={<GroceryListSelect />} />

@@ -22,7 +22,11 @@ export function Footer() {
               Terms of Service
             </Link>
           </li>
-          {/* Add other footer links as needed */}
+          <li className="nav-item">
+            <Link to="/cookie-policy" className="nav-link px-2 text-muted">
+              Cookie Policy
+            </Link>
+          </li>
         </ul>
         <p className="text-center text-muted">© {currentYear} ShareSpice</p>
       </div>
