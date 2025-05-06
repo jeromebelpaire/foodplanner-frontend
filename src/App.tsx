@@ -14,6 +14,8 @@ import Signup from "./components/Signup";
 import { AboutPage } from "./components/AboutPage";
 import LandingPage from "./components/LandingPage";
 import Explore from "./components/Explore";
+import { TermsOfServicePage } from "./components/TermsOfServicePage";
+import { Footer } from "./components/Footer";
 
 function App() {
   return (
@@ -27,6 +29,7 @@ function App() {
             <Route index element={<LandingPage />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/terms-of-service" element={<TermsOfServicePage />} />
             <Route element={<PrivateRoute />}>
               <Route path="recipe/:id/:slug" element={<RecipeDetail />} />
               <Route path="grocery-lists" element={<GroceryListSelect />} />
@@ -37,6 +40,7 @@ function App() {
               <Route path="/recipes/:id/edit" element={<EditRecipe />} />
             </Route>
           </Routes>
+          <Footer />
         </AuthProvider>
       </BrowserRouter>
     </>

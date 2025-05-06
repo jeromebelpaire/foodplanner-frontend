@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
 
@@ -12,6 +12,7 @@ function Signup() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,6 +30,11 @@ function Signup() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!agreedToTerms) {
+      setError("You must agree to the Terms of Service to sign up.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
@@ -54,6 +60,7 @@ function Signup() {
         email,
         first_name: firstName,
         last_name: lastName,
+        accept_tos: agreedToTerms,
       }),
     })
       .then((response) => {
@@ -212,6 +219,24 @@ function Signup() {
                 required
                 autoComplete="new-password"
               />
+            </div>
+
+            <div className="mb-3 form-check">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="termsCheck"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                required
+              />
+              <label className="form-check-label" htmlFor="termsCheck">
+                I have read and agree to the{" "}
+                <Link to="/terms-of-service" target="_blank" rel="noopener noreferrer">
+                  Terms of Service
+                </Link>
+                .
+              </label>
             </div>
 
             <div className="d-grid">
