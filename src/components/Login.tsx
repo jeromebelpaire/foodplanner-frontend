@@ -150,7 +150,9 @@ function Login() {
             <p>
               <i> Does not work in incognito mode yet</i>
               <br />
-              <i> Website is work in progress</i>
+              <i> On mobile it works on Chrome but not yet on Safari and Samsung Internet</i>
+              <br />
+              <i> Website is work in progress, thank you for your patience!</i>
             </p>
           </div>
         </div>
