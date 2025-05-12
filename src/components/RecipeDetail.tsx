@@ -196,7 +196,7 @@ export const RecipeDetail: React.FC = () => {
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <Link
-          to={fromPage === "recipes" ? "/recipes" : "/"}
+          to={fromPage === "recipes" ? "/recipes" : "/explore"}
           className="text-decoration-none d-flex align-items-center"
         >
           <svg
@@ -275,9 +275,9 @@ export const RecipeDetail: React.FC = () => {
             <div className="col-md-4">
               <div className="card bg-light sticky-top" style={{ top: "1rem" }}>
                 <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-3 gap-2">
                     <h2 className="h5 fw-semibold mb-0">Ingredients</h2>
-                    <div className="d-flex align-items-center">
+                    <div className="d-flex align-items-center w-100 w-lg-auto mt-2 mt-lg-0">
                       <label htmlFor="guestCount" className="form-label small me-2 mb-0">
                         Guests:
                       </label>

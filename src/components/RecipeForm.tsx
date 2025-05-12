@@ -540,14 +540,14 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
                   id={`unit-${index}`}
                   value={ingredient.unitId ?? ""}
                   onChange={(e) => handleUnitChange(index, e.target.value)}
-                  className="form-select"
-                  style={{ width: "110px" }}
+                  className={`form-select ${!ingredient.unitId ? "is-invalid" : ""}`}
+                  style={{ width: "130px" }}
                   required
                   aria-label={`Unit for ${ingredientDisplayName}`}
                   disabled={availableUnits.length === 0}
                 >
                   <option value="" disabled>
-                    Unit...
+                    Choose a unit
                   </option>
                   {availableUnits.map((unit) => (
                     <option key={unit.id} value={unit.id}>
