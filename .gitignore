@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .cursor/*
+
+dev.env
+prod.env
