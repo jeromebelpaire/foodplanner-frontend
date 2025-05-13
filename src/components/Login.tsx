@@ -48,13 +48,15 @@ function Login() {
       return;
     }
 
+    const trimmedUsername = username.trim();
+
     fetchFromBackend("/api/auth/login/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": csrfToken,
       },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username: trimmedUsername, password }),
     })
       .then((response) => {
         if (response.ok) {

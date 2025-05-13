@@ -47,6 +47,8 @@ function Signup() {
       return;
     }
 
+    const trimmedUsername = username.trim();
+
     fetchFromBackend("/api/auth/signup/", {
       method: "POST",
       headers: {
@@ -54,7 +56,7 @@ function Signup() {
         "X-CSRFToken": csrfToken,
       },
       body: JSON.stringify({
-        username,
+        username: trimmedUsername,
         password,
         confirm_password: confirmPassword,
         email,
