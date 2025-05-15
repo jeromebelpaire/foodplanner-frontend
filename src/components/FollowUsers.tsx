@@ -4,26 +4,24 @@ import { StylesConfig } from "react-select";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { SearchedUser } from "../types/SearchedUser";
 import { useAuth } from "./AuthContext";
-// Define the structure for react-select options
+
 interface UserOption {
   value: number; // User ID
   label: string; // Username
   is_following: boolean;
 }
 
-// Add a simple type for follower data (can reuse SearchedUser if structure matches)
 interface Follower {
   id: number;
   username: string;
 }
 
-// Type for users the current user is following
 interface FollowingUser {
   id: number;
   username: string;
 }
 
-function FollowUsers() {
+export function FollowUsers() {
   const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
   const [isSubmitting, startSubmitting] = useTransition();
   const [followError, setFollowError] = useState<string | null>(null);
@@ -35,7 +33,6 @@ function FollowUsers() {
   const [followingError, setFollowingError] = useState<string | null>(null);
 
   const { csrfToken } = useAuth();
-  // Debounced function to load user options
   const loadOptions = useCallback(
     (inputValue: string, callback: (options: UserOption[]) => void) => {
       fetchFromBackend(`/api/users/search/?query=${encodeURIComponent(inputValue)}`)
@@ -54,13 +51,12 @@ function FollowUsers() {
         })
         .catch((error) => {
           console.error("Error loading users:", error);
-          callback([]); // Return empty array on error
+          callback([]);
         });
     },
     []
   );
 
-  // --- Fetch followers ---
   useEffect(() => {
     const fetchFollowers = async () => {
       setIsLoadingFollowers(true);
@@ -85,7 +81,6 @@ function FollowUsers() {
     fetchFollowers();
   }, []);
 
-  // --- Fetch users the current user is following ---
   useEffect(() => {
     const fetchFollowing = async () => {
       setIsLoadingFollowing(true);
@@ -112,7 +107,6 @@ function FollowUsers() {
     fetchFollowing();
   }, []);
 
-  // Handler for follow/unfollow button click
   const handleFollowToggle = useCallback(() => {
     if (!selectedUser || isSubmitting) return;
 
@@ -134,7 +128,6 @@ function FollowUsers() {
           );
         }
 
-        // Update the selected user state to reflect the change
         setSelectedUser((prev) => (prev ? { ...prev, is_following: !prev.is_following } : null));
       } catch (err) {
         console.error("Error toggling follow:", err);
@@ -143,7 +136,6 @@ function FollowUsers() {
     });
   }, [selectedUser, isSubmitting]);
 
-  // Custom styles for react-select using StylesConfig
   const selectStyles: StylesConfig<UserOption, false> = {
     container: (provided) => ({
       ...provided,
@@ -151,7 +143,7 @@ function FollowUsers() {
     }),
     menu: (provided) => ({
       ...provided,
-      zIndex: 9999, // Ensure dropdown appears above other elements if needed
+      zIndex: 9999,
     }),
   };
 
@@ -235,7 +227,6 @@ function FollowUsers() {
               className="list-group-item d-flex justify-content-between align-items-center py-1 px-2"
             >
               <span>{follower.username}</span>
-              {/* Optional: Add a button/link to view follower's profile */}
             </div>
           ))}
         </div>
@@ -268,7 +259,6 @@ function FollowUsers() {
               className="list-group-item d-flex justify-content-between align-items-center py-1 px-2"
             >
               <span>{followedUser.username}</span>
-              {/* Optional: Add unfollow button or link */}
             </div>
           ))}
         </div>
@@ -276,5 +266,3 @@ function FollowUsers() {
     </div>
   );
 }
-
-export default FollowUsers;

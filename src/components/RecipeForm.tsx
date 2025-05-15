@@ -32,7 +32,7 @@ interface ApiUnit {
   name: string;
 }
 
-export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel }) => {
+export function RecipeForm({ recipe, onSave, onCancel }: RecipeFormProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -599,4 +599,4 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ recipe, onSave, onCancel
       </div>
     </form>
   );
-};
+}

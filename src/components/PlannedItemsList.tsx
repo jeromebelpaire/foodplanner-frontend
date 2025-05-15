@@ -10,7 +10,11 @@ interface PlannedItemsListProps {
   type: "recipe" | "extra";
 }
 
-function PlannedItemsList({ onRecipePlanned, plannedItemUpdateFlag, type }: PlannedItemsListProps) {
+export function PlannedItemsList({
+  onRecipePlanned,
+  plannedItemUpdateFlag,
+  type,
+}: PlannedItemsListProps) {
   const { csrfToken } = useAuth();
   const [plannedRecipes, setplannedRecipes] = useState<PlannedItem[]>([]);
   const { grocerylistid } = useParams();
@@ -92,5 +96,3 @@ function PlannedItemsList({ onRecipePlanned, plannedItemUpdateFlag, type }: Plan
     </>
   );
 }
-
-export default PlannedItemsList;

@@ -5,10 +5,7 @@ import { FeedItemComment } from "../types/FeedItemComment";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
 
-// --- Helper Components ---
-
-// Reusable Image Thumbnail (moved from Feed.tsx)
-const ImageThumbnail: React.FC<{ event: FeedEvent }> = ({ event }) => {
+export function ImageThumbnail({ event }: { event: FeedEvent }) {
   const recipeImage = event.recipe.image;
   return recipeImage ? (
     <img
@@ -24,10 +21,9 @@ const ImageThumbnail: React.FC<{ event: FeedEvent }> = ({ event }) => {
       }}
     />
   ) : null;
-};
+}
 
-// Formatted Date Component
-const FormattedEventDate: React.FC<{ dateString: string }> = ({ dateString }) => {
+export function FormattedEventDate({ dateString }: { dateString: string }) {
   const eventDate = new Date(dateString);
   const formattedDate = eventDate.toLocaleString([], {
     year: "numeric",
@@ -37,9 +33,8 @@ const FormattedEventDate: React.FC<{ dateString: string }> = ({ dateString }) =>
     minute: "2-digit",
   });
   return <h6 className="card-subtitle mb-2 text-muted small">{formattedDate}</h6>;
-};
+}
 
-// Comment Display Component
 interface CommentDisplayProps {
   comment: FeedItemComment;
   currentUserUsername: string | null;
@@ -47,12 +42,12 @@ interface CommentDisplayProps {
   onUpdate: (commentId: number, newText: string) => Promise<boolean>;
 }
 
-const CommentDisplay: React.FC<CommentDisplayProps> = ({
+export function CommentDisplay({
   comment,
   currentUserUsername,
   onDelete,
   onUpdate,
-}) => {
+}: CommentDisplayProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.text);
   const [isSubmittingEdit, startEditTransition] = useTransition();
@@ -172,37 +167,31 @@ const CommentDisplay: React.FC<CommentDisplayProps> = ({
       )}
     </div>
   );
-};
-
-// --- Main FeedItemCard Component ---
+}
 
 interface FeedItemCardProps {
   event: FeedEvent;
 }
 
-const FeedItemCard: React.FC<FeedItemCardProps> = ({ event }) => {
+export function FeedItemCard({ event }: FeedItemCardProps) {
   const { user, csrfToken } = useAuth();
   const currentUserUsername = user?.username;
 
-  // State for Likes
   const [isLiked, setIsLiked] = useState(event.is_liked_by_user);
   const [currentLikeCount, setCurrentLikeCount] = useState(event.like_count);
   const [isLikeTransitioning, startLikeTransition] = useTransition();
   const [likeError, setLikeError] = useState<string | null>(null);
 
-  // State for Comments
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<FeedItemComment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
   const [currentCommentCount, setCurrentCommentCount] = useState(event.comment_count);
 
-  // State for New Comment Input
   const [newCommentText, setNewCommentText] = useState("");
   const [isPostingComment, startCommentPostTransition] = useTransition();
   const [postCommentError, setPostCommentError] = useState<string | null>(null);
 
-  // --- Event Content Rendering ---
   const renderEventSpecificContent = () => {
     const recipeLink = `/recipe/${event.recipe.id}/${event.recipe.slug}`;
 
@@ -281,7 +270,6 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event }) => {
     }
   };
 
-  // --- Like Handling ---
   const handleLikeToggle = useCallback(() => {
     if (isLikeTransitioning || !csrfToken) return;
     setLikeError(null);
@@ -318,7 +306,6 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event }) => {
     });
   }, [event.id, isLiked, currentLikeCount, isLikeTransitioning, csrfToken]);
 
-  // --- Comment Handling ---
   const fetchComments = useCallback(async () => {
     setIsLoadingComments(true);
     setCommentError(null);
@@ -449,13 +436,10 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event }) => {
     [comments, csrfToken]
   );
 
-  // --- Render ---
   return (
     <div className="py-3 px-3 mb-3 border rounded shadow-sm bg-white">
-      {/* Main Event Content */}
       <div>{renderEventSpecificContent()}</div>
 
-      {/* Like/Comment Action Bar */}
       <div className="mt-2 pt-2 border-top d-flex justify-content-start align-items-center small gap-3">
         <button
           className={`btn btn-sm p-0 border-0 d-flex align-items-center ${
@@ -481,7 +465,6 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event }) => {
       </div>
       {likeError && <div className="alert alert-danger mt-1 py-1 px-2 small">{likeError}</div>}
 
-      {/* Comment Section (Conditional) */}
       {showComments && (
         <div className="mt-3 pt-3 border-top">
           {isLoadingComments && (
@@ -545,6 +528,4 @@ const FeedItemCard: React.FC<FeedItemCardProps> = ({ event }) => {
       )}
     </div>
   );
-};
-
-export default FeedItemCard;
+}

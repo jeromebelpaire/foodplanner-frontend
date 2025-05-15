@@ -1,11 +1,9 @@
-import GroceryListDropdown from "./GroceryListDropdown";
+import { GroceryListDropdown } from "./GroceryListDropdown";
 
-function GroceryListSelect() {
+export function GroceryListSelect() {
   return (
     <div className="container py-5">
       <GroceryListDropdown />
     </div>
   );
 }
-
-export default GroceryListSelect;

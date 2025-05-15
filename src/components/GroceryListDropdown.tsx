@@ -4,7 +4,7 @@ import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
 import Select from "react-select";
 
-function GroceryListDropdown() {
+export function GroceryListDropdown() {
   const { csrfToken } = useAuth();
   interface GroceryList {
     name: string;
@@ -132,5 +132,3 @@ function GroceryListDropdown() {
     </>
   );
 }
-
-export default GroceryListDropdown;

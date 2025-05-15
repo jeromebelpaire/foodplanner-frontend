@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
-function NavBar() {
+export function NavBar() {
   const { authenticated, logout, isLoading, user } = useAuth();
 
   const handleLogout = async (e: React.MouseEvent) => {
@@ -105,5 +105,3 @@ function NavBar() {
     </div>
   );
 }
-
-export default NavBar;

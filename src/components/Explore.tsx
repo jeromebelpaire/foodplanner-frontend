@@ -2,9 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { Link } from "react-router-dom";
 import { Recipe } from "../types/Recipe";
-import StarRating from "./StarRating";
+import { StarRating } from "./StarRating";
 
-function Explore() {
+export function Explore() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +69,6 @@ function Explore() {
     }
   }, [debouncedSearchTerm]);
 
-  // Function to load more recipes
   const loadMoreRecipes = useCallback(async () => {
     if (!nextPageUrl || isLoadingMore || isLoading || searchTerm.length === 1) return;
 
@@ -89,7 +88,6 @@ function Explore() {
     }
   }, [nextPageUrl, isLoadingMore, isLoading, searchTerm]);
 
-  // Effect for scroll detection
   useEffect(() => {
     const handleScroll = () => {
       const scrolledToBottom =
@@ -121,7 +119,6 @@ function Explore() {
           />
         </div>
 
-        {/* Initial Loading Indicator */}
         {isLoading && (
           <div className="d-flex justify-content-center my-5">
             <div className="spinner-border text-primary" role="status">
@@ -130,14 +127,12 @@ function Explore() {
           </div>
         )}
 
-        {/* Error Display */}
         {error && (
           <div className="alert alert-danger text-center" role="alert">
             {error}
           </div>
         )}
 
-        {/* Recipe Grid */}
         {!isLoading && recipes.length > 0 && (
           <div className="row row-cols-1 row-cols-md-3 g-4">
             {recipes.map((recipe) => (
@@ -174,7 +169,6 @@ function Explore() {
           </div>
         )}
 
-        {/* Loading More Indicator */}
         {isLoadingMore && (
           <div className="d-flex justify-content-center my-4">
             <div className="spinner-border spinner-border-sm text-secondary" role="status">
@@ -186,5 +180,3 @@ function Explore() {
     </>
   );
 }
-
-export default Explore;

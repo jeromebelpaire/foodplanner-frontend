@@ -1,8 +1,8 @@
 import { useState } from "react";
-import GroceryListDropdown from "./GroceryListDropdown";
-import PlannedIngredientsList from "./PlannedIngredientsList";
-import PlannerDropdown from "./PlannerDropdown";
-import PlannedItemsList from "./PlannedItemsList";
+import { GroceryListDropdown } from "./GroceryListDropdown";
+import { PlannedIngredientsList } from "./PlannedIngredientsList";
+import { PlannerDropdown } from "./PlannerDropdown";
+import { PlannedItemsList } from "./PlannedItemsList";
 
 function GroceryListManage() {
   const [plannedItemUpdateFlag, setplannedItemUpdateFlag] = useState(false);

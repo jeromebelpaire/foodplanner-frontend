@@ -1,11 +1,9 @@
-import React from "react";
-
 interface StarRatingProps {
   rating: number;
   count: number;
 }
 
-const StarRating: React.FC<StarRatingProps> = ({ rating, count }) => {
+export function StarRating({ rating, count }: StarRatingProps) {
   const fullStars = Math.floor(rating);
   const halfStar = rating % 1 >= 0.5 ? 1 : 0;
   const emptyStars = 5 - fullStars - halfStar;
@@ -22,6 +20,4 @@ const StarRating: React.FC<StarRatingProps> = ({ rating, count }) => {
       <span className="ms-2 text-muted small">({count})</span>
     </div>
   );
-};
-
-export default StarRating;
+}

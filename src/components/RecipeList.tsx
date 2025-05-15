@@ -1,14 +1,12 @@
-// src/components/RecipeList.tsx
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Recipe } from "../types/Recipe";
 import { User } from "../types/User";
 import { Link } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
-import StarRating from "./StarRating";
+import { StarRating } from "./StarRating";
 
-// Add export
-export const RecipeList: React.FC = () => {
+export function RecipeList() {
   const { csrfToken } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -72,14 +70,10 @@ export const RecipeList: React.FC = () => {
     fetchInitialRecipes();
   }, [isInitialLoading]);
 
-  // Function to load more recipes
   const loadMoreRecipes = useCallback(async () => {
-    // Prevent fetching if already loading, no next page, or during initial load
     if (!nextPageUrl || isLoadingMore || isInitialLoading) return;
 
     setIsLoadingMore(true);
-    // Optionally clear or manage errors specifically for loading more
-    // setError(null);
     try {
       const res = await fetchFromBackend(nextPageUrl, { credentials: "include" });
       if (!res.ok) {
@@ -90,19 +84,19 @@ export const RecipeList: React.FC = () => {
       setNextPageUrl(data.next);
     } catch (err) {
       console.error("Error fetching more recipes:", err);
-      // Set error state or show a notification, decide how to handle this error
-      // setError(`Failed to load more recipes. ${err.message}`);
+      setError(
+        `Failed to load more recipes. ${err instanceof Error ? err.message : "Please try again."}`
+      );
     } finally {
       setIsLoadingMore(false);
     }
-  }, [nextPageUrl, isLoadingMore, isInitialLoading]); // Dependencies
+  }, [nextPageUrl, isLoadingMore, isInitialLoading]);
 
-  // Effect for scroll detection
   useEffect(() => {
     const handleScroll = () => {
       const scrolledToBottom =
         window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 300; // Offset
+        document.documentElement.offsetHeight - 300;
 
       if (scrolledToBottom) {
         loadMoreRecipes();
@@ -111,7 +105,7 @@ export const RecipeList: React.FC = () => {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMoreRecipes]); // Dependency
+  }, [loadMoreRecipes]);
 
   const handleDeleteRecipe = async (id: number) => {
     if (!id) return;
@@ -161,7 +155,6 @@ export const RecipeList: React.FC = () => {
           Create New Recipe
         </Link>
       </div>
-
       {recipes.length === 0 ? (
         <p className="text-muted fst-italic">No recipes found. Create your first one!</p>
       ) : (
@@ -235,8 +228,6 @@ export const RecipeList: React.FC = () => {
           ))}
         </div>
       )}
-
-      {/* Loading More Indicator */}
       {isLoadingMore && (
         <div className="d-flex justify-content-center my-4">
           <div className="spinner-border spinner-border-sm text-secondary" role="status">
@@ -246,4 +237,4 @@ export const RecipeList: React.FC = () => {
       )}
     </div>
   );
-};
+}

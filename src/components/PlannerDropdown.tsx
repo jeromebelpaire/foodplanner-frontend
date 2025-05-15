@@ -10,7 +10,6 @@ interface SelectOption {
   label: string;
 }
 
-// Configuration for 'recipe' type
 const recipeConfig = {
   type: "recipe" as const,
   apiEndpoint: "/api/recipes/recipes/",
@@ -25,7 +24,6 @@ const recipeConfig = {
   needsUnitField: false,
 };
 
-// Configuration for 'extra' type (Ingredient)
 const extraConfig = {
   type: "extra" as const,
   apiEndpoint: "/api/ingredients/ingredients/",
@@ -40,7 +38,6 @@ const extraConfig = {
   needsUnitField: true,
 };
 
-// Map types to their configurations
 const configs = {
   recipe: recipeConfig,
   extra: extraConfig,
@@ -51,14 +48,12 @@ interface PlannerDropdownProps {
   type: "recipe" | "extra";
 }
 
-function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
-  // Select the configuration based on the type prop
+export function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
   const config = configs[type];
 
   const { csrfToken } = useAuth();
   const { grocerylistid } = useParams<{ grocerylistid?: string }>();
 
-  // Remove items state, selectedItem now uses SelectOption type
   const [selectedItem, setSelectedItem] = useState<SelectOption | null>(null);
   const [quantity, setQuantity] = useState("");
   const [planDate, setPlanDate] = useState("");
@@ -68,14 +63,12 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Ensure grocerylistid is present before doing anything
     if (!grocerylistid) {
       setError("Grocery list ID is missing from URL.");
       return;
     }
     let isMounted = true;
 
-    // Fetch units only if needed for the current type
     if (config.needsUnitField) {
       async function fetchUnits() {
         setError(null);
@@ -102,7 +95,6 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
       }
       fetchUnits();
     } else {
-      // If units are not needed, clear any previous unit state/error
       setAvailableUnits([]);
       if (error?.includes("Units")) setError(null);
     }
@@ -110,7 +102,6 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
     return () => {
       isMounted = false;
     };
-    // Dependency array includes config.needsUnitField to re-run if type changes
   }, [grocerylistid, config.needsUnitField, error]);
 
   const handleSelectChange = (option: SelectOption | null) => {
@@ -186,17 +177,14 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
     onPlanned,
   ]);
 
-  // Function to load options dynamically for AsyncSelect
   const loadOptions = useCallback(
     (inputValue: string, callback: (options: SelectOption[]) => void): void => {
-      // Don't search if input is too short
       if (!inputValue || inputValue.length < 2) {
         callback([]);
         return;
       }
 
-      // Construct the search URL
-      const searchUrl = `${config.apiEndpoint}?search=${encodeURIComponent(inputValue)}&limit=20`; // Limit results
+      const searchUrl = `${config.apiEndpoint}?search=${encodeURIComponent(inputValue)}&limit=20`;
 
       fetchFromBackend(searchUrl, { credentials: "include" })
         .then((response) => {
@@ -210,13 +198,11 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
           const formattedOptions: SelectOption[] = results.map(
             (item: Recipe | Ingredient): SelectOption => {
               let label: string;
-              // Type guard to ensure correct property access
               if (config.type === "recipe" && "title" in item) {
                 label = config.getOptionLabel(item as Recipe);
               } else if (config.type === "extra" && "name" in item) {
                 label = config.getOptionLabel(item as Ingredient);
               } else {
-                // Fallback or handle unexpected item types
                 console.warn("Unexpected item type encountered in loadOptions:", item);
                 label = `Item ID: ${item.id}`;
               }
@@ -230,11 +216,10 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
         })
         .catch((err) => {
           console.error(`Failed to load ${config.formattedName} options:`, err);
-          // Optionally inform the user via setError or console
           callback([]);
         });
     },
-    [config] // Depends on the config (which changes with 'type')
+    [config]
   );
 
   if (!grocerylistid) {
@@ -246,14 +231,14 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
       <h3 className="mb-3 h5">{`Plan a ${config.formattedName}`}</h3>
       {error && <div className="alert alert-danger small p-2 mb-2">{error}</div>}
       <div className="mb-2">
-        <AsyncSelect<SelectOption> // Specify the option type
-          cacheOptions // Cache results
-          defaultOptions // Load default options on mount (optional, depends on API)
-          loadOptions={loadOptions} // Function to fetch options
+        <AsyncSelect<SelectOption>
+          cacheOptions
+          defaultOptions
+          loadOptions={loadOptions}
           value={selectedItem}
           onChange={handleSelectChange}
           placeholder={config.selectPlaceholder}
-          isClearable // Allow clearing the selection
+          isClearable
           inputId={`select-${type}`}
           aria-label={config.selectPlaceholder}
         />
@@ -333,5 +318,3 @@ function PlannerDropdown({ onPlanned, type }: PlannerDropdownProps) {
     </div>
   );
 }
-
-export default PlannerDropdown;

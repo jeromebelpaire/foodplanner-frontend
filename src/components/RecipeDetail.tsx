@@ -1,23 +1,20 @@
-// src/components/RecipeDetail.tsx
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Recipe, RecipeIngredient } from "../types/Recipe";
 import { User } from "../types/User";
 import { fetchFromBackend } from "./fetchFromBackend";
-import StarRating from "./StarRating";
+import { StarRating } from "./StarRating";
 import RecipeRatingInput from "./RecipeRatingInput";
 import { useAuth } from "./AuthContext";
-// Define type for backend rating object
+
 interface BackendRecipeRating {
   id: number;
-  rating: number; // 0-10 scale
-  comment: string | null; // Add comment field
+  rating: number;
+  comment: string | null;
   author_username: string;
-  // Add other fields if needed
 }
 
-// Add export
-export const RecipeDetail: React.FC = () => {
+export function RecipeDetail() {
   const { csrfToken } = useAuth();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -31,14 +28,12 @@ export const RecipeDetail: React.FC = () => {
   const [userRating, setUserRating] = useState<BackendRecipeRating | null>(null);
   const [userRatingLoading, setUserRatingLoading] = useState(true);
 
-  // Helper function to format scaled ingredients
   const formatIngredient = useCallback((ingredient: RecipeIngredient, count: number): string => {
     if (!ingredient.ingredient || !ingredient.unit) return "Invalid ingredient data";
     const scaledQuantity = ingredient.quantity * count;
-    // Simple formatting, adjust as needed (e.g., for fractions, plurals)
     const formattedQuantity = Number.isInteger(scaledQuantity)
       ? scaledQuantity
-      : parseFloat(scaledQuantity.toFixed(2)); // Use parseFloat to remove trailing zeros if possible
+      : parseFloat(scaledQuantity.toFixed(2));
 
     return `${formattedQuantity} ${ingredient.unit.name} ${ingredient.ingredient.name}`;
   }, []);
@@ -161,7 +156,6 @@ export const RecipeDetail: React.FC = () => {
     fetchRatingRelatedData();
   }, [id]);
 
-  // Calculate scaled ingredients dynamically using useMemo
   const scaledIngredientsList = useMemo(() => {
     if (!recipe?.recipe_ingredients || guestCount < 1) {
       return [];
@@ -330,6 +324,4 @@ export const RecipeDetail: React.FC = () => {
       </div>
     </div>
   );
-};
-
-// export default RecipeDetail; // Remove default export
+}

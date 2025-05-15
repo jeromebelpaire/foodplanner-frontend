@@ -3,34 +3,30 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
 
-function Login() {
-  const { csrfToken, checkAuthStatus, fetchCsrfToken, authenticated } = useAuth(); // Use new hook
+export function Login() {
+  const { csrfToken, checkAuthStatus, fetchCsrfToken, authenticated } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [message, setMessage] = useState(""); // For success messages like from signup
+  const [message, setMessage] = useState("");
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const nextParam = searchParams.get("next") || "/";
 
-  // Check for signup success message
   useEffect(() => {
     if (searchParams.get("signupSuccess") === "true") {
       setMessage("Signup successful! Please log in.");
-      // Optional: remove the query param from URL without reloading
       navigate("/login", { replace: true });
     }
   }, [searchParams, navigate]);
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (authenticated) {
       navigate(nextParam, { replace: true });
     }
   }, [authenticated, navigate, nextParam]);
 
-  // Ensure CSRF token is available
   useEffect(() => {
     if (!csrfToken) {
       fetchCsrfToken();
@@ -158,5 +154,3 @@ function Login() {
     </div>
   );
 }
-
-export default Login;

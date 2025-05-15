@@ -8,7 +8,7 @@ interface plannedItemUpdateFlagProps {
   plannedItemUpdateFlag: boolean;
 }
 
-function PlannedIngredientsList({ plannedItemUpdateFlag }: plannedItemUpdateFlagProps) {
+export function PlannedIngredientsList({ plannedItemUpdateFlag }: plannedItemUpdateFlagProps) {
   const { csrfToken } = useAuth();
 
   const { grocerylistid } = useParams();
@@ -57,7 +57,6 @@ function PlannedIngredientsList({ plannedItemUpdateFlag }: plannedItemUpdateFlag
     } catch (error) {
       console.error("Failed to update ingredient status:", error);
 
-      // Revert the optimistic update if request failed
       setplannedIngredients((currentIngredients) =>
         currentIngredients.map((item) =>
           item.id === itemId ? { ...item, is_checked: currentItem.is_checked } : item
@@ -90,5 +89,3 @@ function PlannedIngredientsList({ plannedItemUpdateFlag }: plannedItemUpdateFlag
     </>
   );
 }
-
-export default PlannedIngredientsList;

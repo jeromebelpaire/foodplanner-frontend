@@ -1,12 +1,14 @@
-import React, { useState, useEffect, lazy, Suspense, useCallback } from "react";
+import { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { FeedEvent, FeedEventType } from "../types/FeedEvent";
-import FeedItemCard from "./FeedItemCard";
+import { FeedItemCard } from "./FeedItemCard";
 import { useAuth } from "./AuthContext";
 
-const FollowUsers = lazy(() => import("./FollowUsers"));
+const FollowUsers = lazy(() =>
+  import("./FollowUsers").then((module) => ({ default: module.FollowUsers }))
+);
 
-const Feed: React.FC = () => {
+export function Feed() {
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ const Feed: React.FC = () => {
       }
       const data = await response.json();
 
-      // Filter the newly fetched events
+      // TODO done in the backend now
       const filteredNewEvents = data.results.filter(
         (event: FeedEvent) => event.event_type !== FeedEventType.UPDATE_RECIPE
       );
@@ -73,11 +75,8 @@ const Feed: React.FC = () => {
     }
   }, [nextPageUrl, isLoadingMore, loading]);
 
-  // --- Effect for scroll detection ---
   useEffect(() => {
     const handleScroll = () => {
-      // Check if scrolled close to the bottom
-      // Offset (e.g., 300px) determines how early to trigger loading
       const scrolledToBottom =
         window.innerHeight + document.documentElement.scrollTop >=
         document.documentElement.offsetHeight - 300;
@@ -89,9 +88,8 @@ const Feed: React.FC = () => {
 
     window.addEventListener("scroll", handleScroll);
 
-    // Cleanup function to remove the event listener
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMoreFeedItems]); // Re-run effect if loadMoreFeedItems changes
+  }, [loadMoreFeedItems]);
 
   return (
     <div className="container mt-4">
@@ -147,7 +145,6 @@ const Feed: React.FC = () => {
             </div>
           )}
 
-          {/* Loading indicator for loading more items */}
           {isLoadingMore && (
             <div className="d-flex justify-content-center my-3">
               <div className="spinner-border spinner-border-sm text-secondary" role="status">
@@ -167,7 +164,6 @@ const Feed: React.FC = () => {
         style={{ backgroundColor: showFollowModal ? "rgba(0, 0, 0, 0.5)" : "transparent" }}
         role="dialog"
         onClick={(e) => {
-          // Close modal if backdrop is clicked
           if (e.target === e.currentTarget) {
             setShowFollowModal(false);
           }
@@ -196,6 +192,4 @@ const Feed: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default Feed;
+}

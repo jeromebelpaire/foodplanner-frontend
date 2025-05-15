@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useAuth } from "./AuthContext";
 
-function Signup() {
+export function Signup() {
   const { csrfToken, fetchCsrfToken, authenticated, checkAuthStatus } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -252,5 +252,3 @@ function Signup() {
     </div>
   );
 }
-
-export default Signup;

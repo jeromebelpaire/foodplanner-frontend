@@ -1,8 +1,7 @@
-import React, { createContext, useState, useEffect, useContext, useCallback } from "react";
+import { createContext, useState, useEffect, useContext, useCallback, ReactNode } from "react";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { useNavigate } from "react-router-dom";
 
-// Define the shape of the context data
 interface AuthContextData {
   csrfToken: string | null;
   isLoading: boolean;
@@ -19,11 +18,13 @@ interface AuthContextData {
   logout: () => Promise<void>;
 }
 
-// Create the context with a default value (can be undefined or a specific shape)
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
 const AuthContext = createContext<AuthContextData | undefined>(undefined);
 
-// Create the provider component
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<{
@@ -33,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     follower_count: number;
     following_count: number;
   } | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Track initial loading
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   const fetchCsrfToken = useCallback(async () => {
@@ -42,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCsrfToken(data.csrfToken);
     } catch (error) {
       console.error("Failed to fetch CSRF token:", error);
-      setCsrfToken(null); // Ensure token is null on failure
+      setCsrfToken(null);
     }
   }, []);
 
@@ -64,9 +65,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(async () => {
     if (!csrfToken) {
       console.error("CSRF token not available for logout.");
-      // Optionally try fetching token again or show error
-      await fetchCsrfToken(); // Try fetching again
-      if (!csrfToken) return; // Exit if still no token
+      await fetchCsrfToken();
+      if (!csrfToken) return;
     }
 
     try {
@@ -74,32 +74,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken!, // Assert non-null after check/fetch
+          "X-CSRFToken": csrfToken!,
         },
       });
       setAuthenticated(false);
       setUser(null);
-      setCsrfToken(null); // Clear CSRF token on logout
-      await fetchCsrfToken(); // Fetch a new token immediately for login form
-      navigate("/login"); // Redirect to login page after logout
+      setCsrfToken(null);
+      await fetchCsrfToken();
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
-      // Handle logout error (e.g., show message to user)
     }
   }, [csrfToken, navigate, fetchCsrfToken]);
 
-  // Fetch CSRF token and check auth status on initial mount
   useEffect(() => {
     const initializeAuth = async () => {
       setIsLoading(true);
       await fetchCsrfToken();
-      await checkAuthStatus(); // Check status after getting token (or in parallel)
+      await checkAuthStatus();
       setIsLoading(false);
     };
     initializeAuth();
-  }, [fetchCsrfToken, checkAuthStatus]); // Dependencies for initialization logic
+  }, [fetchCsrfToken, checkAuthStatus]);
 
-  // The value provided to consuming components
   const value = {
     csrfToken,
     isLoading,
@@ -111,9 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
 
-// Custom hook to use the AuthContext
 export const useAuth = (): AuthContextData => {
   const context = useContext(AuthContext);
   if (context === undefined) {
