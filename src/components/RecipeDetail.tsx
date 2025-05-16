@@ -4,7 +4,7 @@ import { Recipe, RecipeIngredient } from "../types/Recipe";
 import { User } from "../types/User";
 import { fetchFromBackend } from "./fetchFromBackend";
 import { StarRating } from "./StarRating";
-import RecipeRatingInput from "./RecipeRatingInput";
+import { RecipeRatingInput } from "./RecipeRatingInput";
 import { useAuth } from "./AuthContext";
 
 interface BackendRecipeRating {

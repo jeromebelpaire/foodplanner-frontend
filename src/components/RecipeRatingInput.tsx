@@ -10,13 +10,13 @@ interface RecipeRatingInputProps {
   onRatingSubmitted: () => void;
 }
 
-const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
+export function RecipeRatingInput({
   recipeId,
   initialRating,
   initialComment,
   ratingId,
   onRatingSubmitted,
-}) => {
+}: RecipeRatingInputProps) {
   const { csrfToken } = useAuth();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
@@ -206,6 +206,4 @@ const RecipeRatingInput: React.FC<RecipeRatingInputProps> = ({
       )}
     </div>
   );
-};
-
-export default RecipeRatingInput;
+}
